@@ -1,0 +1,238 @@
+// dbvnev.pc
+
+#include "stdafx.h"
+
+#include "resource.h"
+#include "ensqlcam.h"
+
+#include "alaptip.h"
+#include "cvnev.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long CVNev::SQL_VNevBetolt()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    struct sql_s_vnev
+    {
+      unsigned n_kulcs ;
+      /* A palya nev jelenleg a leghosszabb VARCHAR(20) */
+      char     s_vez_nev[16] ;
+      char     s_ker_nev[16] ;
+    } vnev_rekord[20] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int       nFetch, i  ;
+  int       nCiklFelsHat ;
+  vnevadat* pVNevAdat  ;
+
+  long l_SQLCODE  ;
+
+/*  EXEC SQL SET TRANSACTION READ ONLY ; */
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  EXEC SQL DECLARE select_vnev_kurz CURSOR FOR
+    SELECT kulcs, vez_nev, ker_nev
+      FROM vers_nev ;
+
+  EXEC SQL OPEN select_vnev_kurz ;
+
+  nFetch = 0 ;
+
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_vnev_kurz INTO :vnev_rekord ;
+
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( (pVNevAdat = new vnevadat(vnev_rekord[i].s_vez_nev,
+                                     vnev_rekord[i].s_ker_nev)) == NULL )
+      {
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_vnev_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      SetAt( vnev_rekord[i].n_kulcs, pVNevAdat) ;
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+  for ( i = 0 ; i < nCiklFelsHat ; i++ )
+  {
+    if ( (pVNevAdat = new vnevadat(vnev_rekord[i].s_vez_nev,
+                                   vnev_rekord[i].s_ker_nev)) == NULL )
+    {
+      SQL_SQLCAFeltolt() ;
+
+      EXEC SQL CLOSE select_vnev_kurz ;
+
+      EXEC SQL COMMIT WORK ;
+
+      return -1 ;
+    }
+
+    SetAt( vnev_rekord[i].n_kulcs, pVNevAdat) ;
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_vnev_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_vnev_kurz ;
+
+  EXEC SQL ROLLBACK WORK ;
+
+  return l_SQLCODE ;
+}
+
+long CVNev::SQL_VNevINSERT( CString& sUjVezNev, CString& sUjKerNev, unsigned* puiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+    char     s_vez_nev[16] ;
+    char     s_ker_nev[16] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  strcpy(s_vez_nev, (const char*)sUjVezNev) ;
+
+  strcpy(s_ker_nev, (const char*)sUjKerNev) ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL SELECT seq_vnev.NEXTVAL INTO :n_kulcs FROM seq  ;
+
+  EXEC SQL INSERT INTO vers_nev( kulcs, vez_nev, ker_nev)
+             VALUES( :n_kulcs, :s_vez_nev, :s_ker_nev) ;
+
+  *puiKulcs = n_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CVNev::SQL_VNevDELETE(unsigned uiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  n_kulcs = uiKulcs ;
+
+  EXEC SQL DELETE FROM vers_nev WHERE kulcs = :n_kulcs ;
+
+  RemoveKey( uiKulcs) ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CVNev::SQL_VNevUPDATE(unsigned uiKulcs, CString& sUjVezNev, CString& sUjKerNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+    char     s_vez_nev[16] ;
+    char     s_ker_nev[16] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  n_kulcs = uiKulcs ;
+
+  strcpy(s_vez_nev, (const char*)sUjVezNev) ;
+
+  strcpy(s_ker_nev, (const char*)sUjKerNev) ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL UPDATE vers_nev
+           SET vez_nev = :s_vez_nev, ker_nev = :s_ker_nev
+           WHERE kulcs = :n_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}

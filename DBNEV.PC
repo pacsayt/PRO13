@@ -1,0 +1,283 @@
+// dbnev.pc
+
+#include "stdafx.h"
+
+#include <string.h>
+
+#include "ensqlcam.h"
+
+#include "resource.h"
+#include "alaptip.h"
+#include "cnev.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+/* A kiolvasott sztring nincsen " "-szel kiegeszitve es '\0'-val van lezarva */
+/*EXEC ORACLE OPTION (char_map=string) ; */
+
+long CNev::SQL_NevBetolt()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    struct sql_s_nev
+    {
+      unsigned n_kulcs ;
+      /* A palya nev jelenleg a leghosszabb VARCHAR(20) */
+      char     s_nev[21] ;
+    } nev_rekord[20] ;
+
+    char   select_nev[101] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int      nFetch, i ;
+  int      nCiklFelsHat ;
+  nevadat* pNevAdat  ;
+  long l_SQLCODE  ;
+
+  if ( m_enNevtip < eNemzNt || ePalyaNt < m_enNevtip )
+    return -1 ;
+
+  sprintf( select_nev, "SELECT kulcs, %s FROM %s",
+           gl_pNevMezTmb[m_enNevtip], gl_pNevTblTmb[m_enNevtip]) ;
+
+/*  EXEC SQL SET TRANSACTION READ ONLY ; mert a vegen COMMIT/ROLLBACK van ! */
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  EXEC SQL PREPARE select_nev_utas
+           FROM :select_nev ;
+
+  /* Ha nics hiba az utasitasokban, johet az erdemi resz */
+  EXEC SQL DECLARE select_nev_kurz CURSOR FOR select_nev_utas ;
+
+  EXEC SQL OPEN select_nev_kurz ;
+
+  nFetch = 0 ;
+
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_nev_kurz INTO :nev_rekord ;
+/* EXEC SQL FOR :array_size FETCH */
+
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( (pNevAdat = new nevadat(nev_rekord[i].s_nev)) == NULL )
+      {
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_nev_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      SetAt( nev_rekord[i].n_kulcs, pNevAdat) ;
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+  for ( i = 0 ; i < nCiklFelsHat ; i++ )
+  {
+    if ( (pNevAdat = new nevadat(nev_rekord[i].s_nev)) == NULL )
+    {
+      SQL_SQLCAFeltolt() ;
+
+      EXEC SQL CLOSE select_nev_kurz ;
+
+      EXEC SQL COMMIT WORK ;
+
+      return -1 ;
+    }
+
+    SetAt( nev_rekord[i].n_kulcs, pNevAdat) ;
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_nev_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_nev_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CNev::SQL_NevINSERT( CString& sUjNev, unsigned* puiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+    /* A palya nev jelenleg a leghosszabb VARCHAR(20) */
+    char     s_nev[21] ;
+
+    char   select_kulcs[101] ; /* 3. tipusu dinamikus SQL (SELECT)     */
+    char   insert_nev[101] ;   /* 2. tipusu dinamikus SQL (nem SELECT) */
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE  ;
+
+
+  /*  || sUjNev.IsEmpty() kiveve a feltetelbol, az adatbazis ellenorzi */
+  if ( m_enNevtip < eNemzNt || ePalyaNt < m_enNevtip )
+    return -1 ;
+
+  sprintf( select_kulcs, "SELECT  %s.NEXTVAL FROM seq", gl_pSeqTmb[m_enNevtip]) ;
+
+  sprintf( insert_nev, "INSERT INTO %s VALUES( :n_kulcs, :s_nev)",
+           gl_pNevTblTmb[m_enNevtip], gl_pNevMezTmb[m_enNevtip]) ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL PREPARE insert_utas       FROM :insert_nev ;
+  EXEC SQL PREPARE select_kulcs_utas FROM :select_kulcs ;
+
+  EXEC SQL DECLARE select_kulcs_kurz CURSOR FOR select_kulcs_utas ;
+
+  EXEC SQL OPEN select_kulcs_kurz ;
+  EXEC SQL FETCH select_kulcs_kurz INTO :n_kulcs ;
+
+  strcpy(s_nev, (const char*)sUjNev) ;
+
+  EXEC SQL EXECUTE insert_utas USING :n_kulcs, :s_nev ;
+
+  *puiKulcs = n_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_kulcs_kurz ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_kulcs_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CNev::SQL_NevDELETE(unsigned uiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+    /* 2. tipusu dinamikus SQL (nem SELECT) */
+    char  delete_nev[101] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  if ( m_enNevtip < eNemzNt || ePalyaNt < m_enNevtip )
+    return -1 ;
+
+  sprintf( delete_nev, "DELETE FROM %s WHERE kulcs = :n_kulcs",
+           gl_pNevTblTmb[m_enNevtip]) ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL PREPARE delete_utas FROM :delete_nev ;
+
+  n_kulcs = uiKulcs ;
+
+  EXEC SQL EXECUTE delete_utas USING :n_kulcs ;
+
+  RemoveKey( uiKulcs) ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CNev::SQL_NevUPDATE(unsigned uiKulcs, CString& sUjNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+    /* A palya nev jelenleg a leghosszabb VARCHAR(20) */
+    char     s_nev[21] ;
+
+    char update_nev[101] ;   /* 2. tipusu dinamikus SQL (nem SELECT) */
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE  ;
+
+  /*  || sUjNev.IsEmpty() kiveve a feltetelbol, az adatbazis ellenorzi */
+  if ( m_enNevtip < eNemzNt || ePalyaNt < m_enNevtip )
+    return -1 ;
+
+  sprintf( update_nev, "UPDATE %s SET %s = :s_nev WHERE kulcs = :n_kulcs",
+           gl_pNevTblTmb[m_enNevtip], gl_pNevMezTmb[m_enNevtip]) ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL PREPARE update_nev_utas FROM :update_nev ;
+
+  n_kulcs = uiKulcs ;
+  strcpy(s_nev, (const char*)sUjNev) ;
+
+  EXEC SQL EXECUTE update_nev_utas USING :s_nev, :n_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}

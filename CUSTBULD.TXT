@@ -1,0 +1,2 @@
+e:\proc\bin\proc $(ProjDir)\$(InputName).PC CONFIG=procconf.h include="$(MSDEVDIR)\mfc\include" include="$(MSDEVDIR)\include"
+$(ProjDir)\$(InputName).cpp

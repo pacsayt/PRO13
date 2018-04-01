@@ -1,0 +1,839 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""res\\proba13.rc2""  // non-App Studio edited resources\r\n"
+    "\r\n"
+    "#include ""afxres.rc""  \t// Standard components\r\n"
+    "#include ""afxprint.rc""  // printing/print preview resources\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "RES\\PROBA13.ICO"
+IDR_PROBA13TYPE         ICON    DISCARDABLE     "RES\\PROBADOC.ICO"
+IDR_LEK_DOC_TEMPL_1     ICON    DISCARDABLE     "RES\\PROBADOC.ICO"
+IDR_IMPORTALAS          ICON    DISCARDABLE     "RES\\PROBADOC.ICO"
+IDI_ICON1               ICON    DISCARDABLE     "RES\\ICON1.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "RES\\TOOLBAR.BMP"
+IDR_IMPORTALAS          BITMAP  MOVEABLE PURE   "RES\\TOOLBAR.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "Csatlakozás az adatbázishoz", ID_CSATL_ADATB
+        MENUITEM SEPARATOR
+        MENUITEM "&Mentés",                     ID_FILE_MENTES, INACTIVE
+        MENUITEM "&Betöltés",                   ID_FILE_BETOLTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&rint Setup...",             ID_FJL_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Felvitel"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_FELVITEL_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_FELVITEL_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_FELVITEL_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_FELVITEL_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_FELVITEL_NAGYDJNV
+        MENUITEM "&Pálya név\tCtrl+p",          ID_FELVITEL_PLYANV
+        MENUITEM "P&ontszámok\tCtrl+o",         ID_FELVITEL_PONTSZMOK
+        MENUITEM SEPARATOR
+        MENUITEM "&Szezon\tCtrl+s",             ID_FELVITEL_SZEZON
+        MENUITEM SEPARATOR
+        MENUITEM "&Nevezési lista\tCtrl+n",     ID_FELVITEL_NVZLST
+        MENUITEM SEPARATOR
+        MENUITEM "&Rajtsorrend / Befutó\tCtrl+r", ID_FELVITEL_RS_BEF
+    END
+    POPUP "Lekérdezések"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_LEKERD_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_LEKERD_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_LEKERD_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_LEKERD_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_LEKERD_NAGYDJNV
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Proba13...",           ID_APP_ABOUT
+    END
+END
+
+IDR_PROBA13TYPE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Felvitel"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_FELVITEL_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_FELVITEL_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_FELVITEL_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_FELVITEL_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_FELVITEL_NAGYDJNV
+        MENUITEM "&Pálya név\tCtrl+p",          ID_FELVITEL_PLYANV
+        MENUITEM "P&ontszámok\tCtrl+o",         ID_FELVITEL_PONTSZMOK
+        MENUITEM SEPARATOR
+        MENUITEM "&Szezon\tCtrl+s",             ID_FELVITEL_SZEZON
+        MENUITEM SEPARATOR
+        MENUITEM "&Nevezési lista\tCtrl+n",     ID_FELVITEL_NVZLST
+        MENUITEM SEPARATOR
+        MENUITEM "&Rajtsorrend / Befutó\tCtrl+r", ID_FELVITEL_RS_BEF
+    END
+    POPUP "Lekérdezések"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_LEKERD_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_LEKERD_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_LEKERD_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_LEKERD_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_LEKERD_NAGYDJNV
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Proba13...",           ID_APP_ABOUT
+    END
+END
+
+IDR_LEK_DOC_TEMPL_1 MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&Mentés",                     ID_FILE_MENTES
+        MENUITEM "&Bezárás",                    ID_FILE_BEZARAS
+        MENUITEM "&Betöltés",                   ID_FILE_BETOLTES
+        MENUITEM SEPARATOR
+        MENUITEM "P&rint...\tCtrl+P",           ID_FJL_PRINT
+        MENUITEM "Print Pre&view",              ID_FJL_PRINTPREVIEW
+        MENUITEM "P&rint Setup...",             ID_FJL_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Felvitel"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_FELVITEL_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_FELVITEL_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_FELVITEL_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_FELVITEL_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_FELVITEL_NAGYDJNV
+        MENUITEM "&Pálya név\tCtrl+p",          ID_FELVITEL_PLYANV
+        MENUITEM "P&ontszámok\tCtrl+o",         ID_FELVITEL_PONTSZMOK
+        MENUITEM SEPARATOR
+        MENUITEM "&Szezon\tCtrl+s",             ID_FELVITEL_SZEZON
+        MENUITEM SEPARATOR
+        MENUITEM "&Nevezési lista\tCtrl+n",     ID_FELVITEL_NVZLST
+        MENUITEM SEPARATOR
+        MENUITEM "&Rajtsorrend / Befutó\tCtrl+r", ID_FELVITEL_RS_BEF
+    END
+    POPUP "Lekérdezések"
+    BEGIN
+        MENUITEM "&Versenyzõ név\tCtrl+v",      ID_LEKERD_VERSENYZNV
+        MENUITEM "Nem&zetiség név\tCtrl+z",     ID_LEKERD_NEMZETISGNV
+        MENUITEM "&Csapat név\tCtrl+c",         ID_LEKERD_CSAPAT
+        MENUITEM "&Motor név\tCtrl+m",          ID_LEKERD_MOTORNV
+        MENUITEM "Na&gydíj név\tCtrl+g",        ID_LEKERD_NAGYDJNV
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Proba13...",           ID_APP_ABOUT
+    END
+END
+
+IDR_IMPORTALAS MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "C",            ID_FELVITEL_CSAPAT,     VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_FELVITEL_NAGYDJNV,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_FELVITEL_MOTORNV,    VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FELVITEL_NVZLST,     VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FELVITEL_PONTSZMOK,  VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FELVITEL_PLYANV,     VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_FJL_PRINT,           VIRTKEY, CONTROL
+    "S",            ID_FELVITEL_SZEZON,     VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_FELVITEL_VERSENYZNV, VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_FELVITEL_NEMZETISGNV, VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_IMPORTALAS ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  34, 22, 217, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Proba13"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,18,20
+    LTEXT           "Proba13 Application Version 2.0.107",IDC_STATIC,40,10,
+                    119,8
+    LTEXT           "Copyright © 1999",IDC_STATIC,40,25,119,8
+    DEFPUSHBUTTON   "OK",IDOK,176,6,32,14,WS_GROUP
+END
+
+IDD_CSATL_DLG DIALOG DISCARDABLE  0, 0, 182, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Csatlakozás az adatbázishoz"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NEV_E,45,10,48,12
+    EDITTEXT        IDC_JELSZO_E,45,30,48,12,ES_PASSWORD
+    DEFPUSHBUTTON   "Csatlakozás",IDC_CSATL_DB,105,10,65,14
+    PUSHBUTTON      "Cancel",IDCANCEL,105,30,65,14
+    LTEXT           "Név :",IDC_BEJ_NEV_S,10,10,20,11
+    LTEXT           "Jelszó :",IDC_JELSZO_S,10,30,24,11,NOT WS_GROUP
+END
+
+IDD_FELVITEL_NEVEK DIALOG DISCARDABLE  0, 0, 203, 235
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Nevek felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NFLV_EDIT,21,152,92,12
+    LISTBOX         IDC_NLIST,21,27,100,118,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Felvesz",IDC_NFLV_DB,21,173,90,14
+    PUSHBUTTON      "Átnevez",IDC_NATN_B,21,192,40,14
+    PUSHBUTTON      "Töröl",IDC_NTRL_B,71,192,40,14
+    PUSHBUTTON      "OK",IDOK,140,5,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,140,25,50,14
+    GROUPBOX        "Név",IDC_NSZOV_G,11,12,120,205
+END
+
+IDD_VERSNEV_FELV DIALOG DISCARDABLE  0, 0, 243, 239
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Versenyzõ nevek felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_VEZN_EDIT,20,160,60,12
+    EDITTEXT        IDC_KERN_EDIT,85,160,60,12
+    LISTBOX         IDC_VN_LIST,21,27,134,118,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Felvesz",IDC_VNFLV_DB,20,180,125,14
+    PUSHBUTTON      "Átnevez",IDC_VNATN_B,20,200,60,14
+    PUSHBUTTON      "Töröl",IDC_VNTRL_B,85,200,60,14
+    PUSHBUTTON      "OK",IDOK,180,5,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,180,25,50,14
+    LTEXT           "Vezetéknév :",IDC_VNVEZNEV_S,20,150,40,8
+    LTEXT           "Keresztnév :",IDC_VNKERNEV_S,85,150,40,8
+    GROUPBOX        "Versenyzõk",IDC_VN_S,11,12,154,213
+END
+
+IDD_PONT_FELV DIALOG DISCARDABLE  0, 0, 238, 136
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Pontozások felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_PFLV_EDIT,10,70,110,12
+    LISTBOX         IDC_P_LIST,10,25,165,40,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Felvesz",IDC_PFLV_DB,10,90,110,14
+    PUSHBUTTON      "Módosít",IDC_PMOD_B,10,110,50,14
+    PUSHBUTTON      "Töröl",IDC_PTRL_B,70,110,50,14
+    PUSHBUTTON      "OK",IDOK,185,10,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,185,30,45,14
+    LTEXT           "Pontozás a helyezés függvényében",IDC_PONTOZHF_S,10,5,
+                    122,8
+    LTEXT           "1.      2.      3.      4.      5.      6.      7.      8.      9.      10.",
+                    IDC_PHLYZS_S,10,15,155,8
+END
+
+IDD_SZEZ_FELV DIALOG DISCARDABLE  0, 0, 323, 281
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Szezon felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_SZEZ_CB,45,10,35,79,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PNT_CB,20,55,181,56,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PNT_EDZE_E,20,75,23,12
+    EDITTEXT        IDC_PNT_LGYKOR_E,20,95,23,12
+    EDITTEXT        IDC_ELS_LGJ_BESZ_E,20,115,23,12
+    LISTBOX         IDC_FTMK_LIST,20,166,280,50,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_NAGYD_CB,20,225,100,62,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PLYA_CB,130,225,100,61,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_DAT_E,240,225,49,12
+    DEFPUSHBUTTON   "Felvesz",IDC_FELV_DB,20,245,65,14
+    PUSHBUTTON      "Módosít",IDC_MOD_B,90,245,65,14
+    PUSHBUTTON      "Töröl",IDC_TRL_B,160,245,65,14
+    PUSHBUTTON      "OK",IDOK,250,10,60,14
+    PUSHBUTTON      "Szezon felvesz",IDC_SZFLV_B,250,30,60,15
+    PUSHBUTTON      "Szezon töröl",IDC_SZTRL_B,250,50,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,250,70,60,14
+    GROUPBOX        "Pontozás",IDC_PONT_G,10,30,200,110
+    LTEXT           "1.     2.     3.     4.     5.     6.     7.     8.     9.     10.",
+                    IDC_PHLYZS_S,20,45,178,8
+    LTEXT           "Nagydíj",IDC_NAGYD_S,20,156,30,8
+    LTEXT           "Pálya",IDC_PLYA_S,130,156,30,8
+    LTEXT           "Dátum",IDC_DAT_S,240,156,30,8
+    GROUPBOX        "Futamok",IDC_FUT_G,10,145,300,125
+    LTEXT           "Szezon :",IDC_SZEZ_S,11,12,30,8
+    CONTROL         "pont edzéselsõségért",IDC_PONT_EDZ_ELS_S,"Static",
+                    SS_LEFTNOWORDWRAP | WS_GROUP,50,76,80,12
+    CONTROL         "pont leggyorsabb körért",IDC_PONT_LEGGY_KOR_S,"Static",
+                    SS_LEFTNOWORDWRAP | WS_GROUP,50,96,80,12
+    CONTROL         "legjobb befutó eredménye számít",IDC_ELS_LGJ_BESZ_S,
+                    "Static",SS_LEFTNOWORDWRAP | WS_GROUP,50,116,110,12
+END
+
+IDD_NVZ_LIST_SZRK DIALOG DISCARDABLE  0, 0, 439, 250
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Nevezési lista szerkesztése"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_NVZL_SZEZ_CB,45,10,35,91,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_NEVEZES_LIST,10,55,415,110,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_RAJTSZ_E,10,175,15,12
+    COMBOBOX        IDC_ELSOV_CB,30,175,85,55,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_VERSENYZ_CB,120,175,90,55,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_NEMZ_CB,215,175,40,55,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CSAPAT_CB,265,175,70,55,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MOTOR_CB,355,175,70,55,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Felvesz",IDC_FELV_DB,10,195,65,14
+    PUSHBUTTON      "Módosít",IDC_MOD_B,85,195,65,14
+    PUSHBUTTON      "Töröl",IDC_TRL_B,160,195,65,14
+    PUSHBUTTON      "OK",IDOK,5,230,60,14
+    PUSHBUTTON      "Lista felvesz",IDC_NVZLST_FLV_B,75,230,60,14
+    PUSHBUTTON      "Lista töröl",IDC_NVZLST_TRL_B,145,230,60,14
+    PUSHBUTTON      "Cancel",IDCANCEL,215,230,60,14
+    LTEXT           "Szezon :",IDC_SZEZ_S,11,12,30,8
+    LTEXT           "Versenyzõ",IDC_VERSZO_S,120,45,40,8
+    LTEXT           "Nemzetiség",IDC_NEMZ_S,215,45,40,8
+    LTEXT           "Csapat",IDC_CSAP_S,260,45,30,8
+    GROUPBOX        "Nevezési lista",IDC_NVZ_LST_G,5,30,425,190
+    LTEXT           "Motor",IDC_MOTOR_S,355,45,25,8
+    LTEXT           "Rsz.",IDC_RAJTSZ_S,10,45,15,8
+    LTEXT           "Elsõ verseny",IDC_ELSO_VERS_S,30,45,45,8
+    LTEXT           "A névfelvételi ablakok felv. mezõi szélességét csökkenteni kell !",
+                    IDC_FIGYELMEZ_S,295,195,125,20
+END
+
+IDD_SZEZ_ND_VAL_D DIALOG DISCARDABLE  0, 0, 231, 121
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Szezon - Nagydij választása"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_FLV_SZEZ_LB,10,20,45,95,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_NAGYDIJAK_LB,66,20,99,95,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Rajtsorrend",IDC_RAJTSORREND_R,"Button",
+                    BS_AUTORADIOBUTTON,175,20,50,10
+    CONTROL         "Befuto",IDC_BEFUTO_R,"Button",BS_AUTORADIOBUTTON,175,35,
+                    37,11
+    DEFPUSHBUTTON   "Szerkeszt",ID_SZERK_B,175,70,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,95,50,14
+    LTEXT           "Nagydijak a szezonban :",IDC_STATIC,66,10,84,9,NOT 
+                    WS_GROUP
+    LTEXT           "Szezon :",IDC_SZEZON_S,10,10,38,8,NOT WS_GROUP
+END
+
+IDD_BEF_FELV DIALOG DISCARDABLE  0, 0, 448, 224
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Befuto Idõeredményeinek felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_HELYEZES_E,15,150,15,12
+    EDITTEXT        IDC_RSZ_E,45,150,20,12
+    COMBOBOX        IDC_VERSENYZO_CB,90,150,90,75,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_NEMZETISEG_CB,185,150,40,75,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CSAPAT_CB,230,150,70,75,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MOTOR_CB,305,150,70,75,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_IDOEREDMENY_E,380,150,48,12
+    PUSHBUTTON      "Felvesz",IDC_FELVESZ_B,10,170,60,14
+    PUSHBUTTON      "Módosit",IDC_MODOSIT_B,80,170,60,14
+    PUSHBUTTON      "Töröl",IDC_TOROL_B,150,170,60,14
+    PUSHBUTTON      "Nevek . . .",IDC_NEVEK_B,225,170,53,14
+    PUSHBUTTON      "Egyebek . . .",IDC_LEGGY_KOR_B,295,170,70,14
+    PUSHBUTTON      "Beszámít . . .",IDC_BESZAMIT_B,375,170,65,14
+    LISTBOX         IDC_EREDM_LB,10,47,430,97,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,5,200,60,14
+    PUSHBUTTON      "Befutó Felvesz",IDC_RB_FELVESZ_B,75,200,60,14
+    PUSHBUTTON      "Befutó Töröl",IDC_RB_TOROL_B,145,200,60,14
+    PUSHBUTTON      "Cancel",IDCANCEL,215,200,60,14
+    LTEXT           "Helyezés",IDC_HELYEZES_S,10,35,30,10
+    LTEXT           "Rajtszám",IDC_RAJTSZAM_S,45,35,30,10
+    LTEXT           "Versenyzõ",IDC_VERSENYZO_S,90,35,40,10
+    LTEXT           "Nemzetiség",IDC_NEMZETISEG_S,185,35,40,10
+    LTEXT           "Csapat",IDC_CSAPAT_S,230,35,30,10
+    LTEXT           "Motor",IDC_MOTOR_S,305,35,30,10
+    LTEXT           "Idõeredmény",IDC_IDOEREDMENY_S,380,35,46,10
+    GROUPBOX        "Static",IDC_RB_NEV_S,5,0,440,190
+    LTEXT           "Leggyorsabb kör",IDC_LEGGY_KOR,10,10,55,8
+    CTEXT           "",IDC_LGYK_EREDM_S,10,22,430,9
+    PUSHBUTTON      "Importál",IDC_IMPORTAL_B,390,200,50,14,WS_DISABLED
+END
+
+IDD_RAJTS_FELV DIALOG DISCARDABLE  0, 0, 448, 209
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Rajtsorrend Idõeredményeinek felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_HELYEZES_E,15,130,15,12
+    EDITTEXT        IDC_RSZ_E,45,130,20,12
+    COMBOBOX        IDC_VERSENYZO_CB,90,130,90,80,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_NEMZETISEG_CB,185,130,40,80,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CSAPAT_CB,230,130,70,80,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MOTOR_CB,305,130,70,80,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_IDOEREDMENY_E,380,130,48,12
+    LISTBOX         IDC_EREDM_LB,10,27,430,97,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Felvesz",IDC_FELVESZ_B,10,150,60,14
+    PUSHBUTTON      "Módosit",IDC_MODOSIT_B,80,150,60,14
+    PUSHBUTTON      "Töröl",IDC_TOROL_B,150,150,60,14
+    PUSHBUTTON      "Nevek . . .",IDC_NEVEK_B,225,150,53,14
+    PUSHBUTTON      "Beszámít . . .",IDC_BESZAMIT_B,375,150,65,14
+    DEFPUSHBUTTON   "OK",IDOK,5,185,60,14
+    PUSHBUTTON      "Rajts Felvesz",IDC_RB_FELVESZ_B,75,185,60,14
+    PUSHBUTTON      "Rajts Töröl",IDC_RB_TOROL_B,145,185,60,14
+    PUSHBUTTON      "Cancel",IDCANCEL,215,185,60,14
+    LTEXT           "Helyezés",IDC_HELYEZES_S,10,15,30,10
+    LTEXT           "Rajtszám",IDC_RAJTSZAM_S,45,15,30,10
+    LTEXT           "Versenyzõ",IDC_VERSENYZO_S,90,15,40,10
+    LTEXT           "Nemzetiség",IDC_NEMZETISEG_S,185,15,40,10
+    LTEXT           "Csapat",IDC_CSAPAT_S,230,15,30,10
+    LTEXT           "Motor",IDC_MOTOR_S,305,15,30,10
+    LTEXT           "Idõeredmény",IDC_IDOEREDMENY_S,380,15,46,10
+    GROUPBOX        "Static",IDC_RB_NEV_S,5,0,440,175
+    PUSHBUTTON      "Importál",IDC_IMPORTAL_B,390,185,50,14,WS_DISABLED
+END
+
+IDD_EREDM_BESZ DIALOG DISCARDABLE  0, 0, 186, 69
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Befutó eredmények felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,23,50,14
+    LTEXT           "Az eredmény beszámít :",IDC_EREDM_BESZ_S,10,5,75,8
+    CONTROL         "a versenyzõ",IDC_VERSENYZO_CH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,20,51,13
+    CONTROL         "a csapat",IDC_CSAPAT_CH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,35,51,15
+    LTEXT           "világbajnoki szereplésébe .",IDC_VB_SZEREPLE_S,10,55,90,
+                    10
+END
+
+IDD_EGYEBEK DIALOG DISCARDABLE  0, 0, 231, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Befutó eredmények felvétele"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,175,5,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,22,50,14
+    LTEXT           "A versenyen elért leggyorsabb kör :",
+                    IDC_VELT_LEGGY_KOR_S,10,30,121,9
+    COMBOBOX        IDC_LGGY_VERS_CB,71,49,90,70,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Versenyzõ :",IDC_VERSENYZO_S,17,49,40,8
+    LTEXT           "Idõeredmény :",IDC_IDOER_S,17,69,49,11
+    LTEXT           "Körben :",IDC_KORBEN_S,17,89,30,8
+    LTEXT           "Átlagsebesség :",IDC_ATL_SEB_S,17,109,51,10
+    EDITTEXT        IDC_LEGGY_IDOER_E,71,69,48,12
+    EDITTEXT        IDC_KORBEN_E,71,89,48,12
+    EDITTEXT        IDC_ATLSEB_E,71,109,48,12
+    CONTROL         " Fele pontszám",IDC_FELE_PONT_CHK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,10,64,11
+END
+
+IDD_LEKERD_1 DIALOG DISCARDABLE  0, 0, 299, 201
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Nevekre vonatkozó lekérdezések"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LEK1_NEVEK_LB,10,15,100,177,LBS_SORT | 
+                    LBS_MULTIPLESEL | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LEK1_SZEZ_CB,120,15,55,109,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         " Radio1",IDC_LEK1_VBSZER_RB1,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,125,45,85,10
+    CONTROL         " Radio2",IDC_LEK1_FUTGY_RB2,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,125,65,85,10
+    CONTROL         " Radio3",IDC_LEK1_EDZELS_RB3,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,125,85,85,10
+    CONTROL         " Radio4",IDC_LEK1_LEGGYKOR_RB4,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,125,105,85,10
+    CONTROL         " Radio5",IDC_LEK1_OSSZER_RB5,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,125,125,85,10
+    CONTROL         " Radio6",IDC_LEK1_HOLVERS_RB6,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,125,145,85,10
+    CONTROL         " Radio7",IDC_VBPILLALL_RB7,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,125,165,120,10
+    DEFPUSHBUTTON   "Keresés",IDC_KERESES_B,240,15,50,14
+    PUSHBUTTON      "Kilépés",IDC_KILEPES_B,240,31,50,14
+    LTEXT           "Név :",IDC_NEV_S,10,5,62,8
+    LTEXT           "Szezontól :",IDC_LEK1_SZEZ_S,120,5,56,8
+END
+
+IDD_LEK_ER_MENT DIALOG DISCARDABLE  0, 0, 187, 17
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Mentés",IDC_LK_ER_MNT_B,5,2,50,12
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_SZEZ_FELV DLGINIT
+BEGIN
+    IDC_SZEZ_CB, 0x403, 1, 0
+"\000" 
+    0
+END
+
+IDD_NVZ_LIST_SZRK DLGINIT
+BEGIN
+    IDC_NVZL_SZEZ_CB, 0x403, 1, 0
+"\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_KEZ_CURSOR          CURSOR  DISCARDABLE     "RES\\KEZ_CURS.CUR"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_IMPORTALAS          "Importálás"
+    IDR_MAINFRAME           "Proba13 Windows Alkalmazás"
+    IDR_PROBA13TYPE         "\nProba13\nProba13 Document\n\n\nProba13.Document\nProba13 Document"
+    IDR_LEK_DOC_TEMPL_1     "CLekEredm1Doc\nCLekEredm1Doc\nProba13 CLekEredm1Doc 1\n1\n1\nProba13.Document\nProba13 Document"
+    IDS_CSAPAT_FILE         "csapat.nev"
+    IDS_MOTOR_FILE          "motor.nev"
+    IDS_NAGYDIJ_FILE        "nagydij.nev"
+    IDS_NEMZETISEG_FILE     "nemzetis.nev"
+    IDS_PALYA_FILE          "palya.nev"
+    IDS_PONT_TABLA_FILE     "ptabla.nev"
+    IDS_VERSENYZO_FILE      "versenyz.nev"
+    IDS_FELVSZEZ_FILE       "flvszezo.dat"
+    IDS_MNT_LEK_TIP         """Mentett lekérdezések (*.mlk)|*.mlk"""
+    IDS_MINDEN_FILE_TIP     """All Files (*.*)|*.*||"""
+    IDS_RS_MEGV             "A rajtsorrend megváltozott - Mentse ?"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "Proba13 Windows Alkalmazás"
+    AFX_IDS_IDLEMESSAGE     "Kész"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Információkat jelenít meg a programról."
+    ID_APP_EXIT             "Kilépés az alkalmazásból."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane"
+    ID_PREV_PANE            "Switch back to the previous window pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_ARRANGE       "Arrange icons at the bottom of the window"
+    ID_WINDOW_CASCADE       "Arrange windows so they overlap"
+    ID_WINDOW_TILE_HORZ     "Arrange windows as non-overlapping tiles"
+    ID_WINDOW_TILE_VERT     "Arrange windows as non-overlapping tiles"
+    ID_WINDOW_SPLIT         "Split the active window into panes"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection"
+    ID_EDIT_CLEAR_ALL       "Erase everything"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Eltûnteti, illetve megjeleníti az eszközsávot."
+    ID_VIEW_STATUS_BAR      "Eltûnteti, illetve megjeleníti az állapotsort."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+    AFX_IDS_MDICHILD        "Activate this window"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FELVITEL_CSAPAT      "Új csapat nevek felvitele, meglévõk módosítása."
+    ID_FELVITEL_MOTORNV     "Új motor nevek felvitele, meglévõk módosítása."
+    ID_FELVITEL_NAGYDJNV    "Új nagydíj nevek felvitele, meglévõk módosítása."
+    ID_FELVITEL_NEMZETISGNV "Új nemzetiség nevek felvitele, meglévõk módosítása."
+    ID_FELVITEL_PLYANV      "Új pálya nevek felvitele, meglévõk módosítása."
+    ID_FELVITEL_PONTSZMOK   "Új pontozási lista felvitele, meglévõ módosítása."
+    ID_FELVITEL_VERSENYZNV  "Versenyzõ nevek felvitele."
+    ID_LEKERD_VERSENYZNV    "Versenyzõ nevekre vonatkozó lekérdezések."
+    ID_LEKERD_NEMZETISGNV   "Nemzetiség nevekre vonatkozó lekérdezések."
+    ID_FELVITEL_SZEZON      "Új szezon felvitele, meglévõ szerkesztése"
+    ID_LEKERD_CSAPAT        "Csapat nevekre vonatkozó lekérdezések."
+    ID_FELVITEL_NVZLST      "Új nevezési lista felvitele, meglévõ módosítása"
+    ID_LEKERD_MOTORNV       "Motor nevekre vonatkozó lekérdezések."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_LEKERD_NAGYDJNV      "Nagydíj nevekre vonatkozó lekérdezések."
+    ID_FELVITEL_RAJTSORRENDBEFUTO 
+                            "Rajtsorrend / Befutó eredmények felvétele - szerkesztése"
+    ID_FELVITEL_RS_BEF      "Rajtsorrend - befutó felvitele - módosítása"
+    ID_FILE_MENTES          "Lekérdezés mentése"
+    ID_FILE_BEZARAS         "Az aktív lekérdezés ablak bezárása"
+    ID_FILE_BETOLTES        "Lekérdezés betöltése"
+    ID_FJL_PRINT            "Az aktív lekérdezés nyomtatása"
+    ID_FJL_PRINTPREVIEW     "Teljes lap megjelenítése"
+    ID_FJL_PRINTSETUP       "A nyomtató és a nyomtatási opciók megváltoztatása"
+    ID_CSATL_ADATB          "Csatlakozás az adatbázishoz"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ISMLEN_NEVT_SZOV    "Ismeretlen névtípus"
+    IDS_VERSENYZNV_SZOV     "Versenyzõ nevek"
+    IDS_NEMZETSGNV_SZOV     "Nemzetiség nevek"
+    IDS_CSAPAT_SZOV         "Csapat nevek"
+    IDS_MOTORNV_SZOV        "Motor nevek"
+    IDS_NAGYDJNV_SZOV       "Nagydíj nevek"
+    IDS_ISMLEN_LEK_SZOV     "Ismeretlen lekérdezés"
+    IDS_VB_SZEREP_SZOV      " VB szereplések"
+    IDS_FUT_GYOZ_SZOV       " Futamgyõzelmek"
+    IDS_EDZ_ELS_SZOV        " Edzéselsõségek"
+    IDS_LEGGY_KOR_SZOV      " Leggyorsabb körök"
+    IDS_OSSZ_ER_SZOV        " Összes eredmény"
+    IDS_HOL_VERS_SZOV       " Hol versenyzett"
+    IDS_VB_PILL_ALL_SZOV    " A kijelölt szezon pillanatnyi állása"
+    IDS_PALYANEV_SZOV       "Pálya nevek"
+    IDS_NEVEK_FELV_SZOV     " nevek felvitele"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BEF_MEGV            "A befutó megváltozott. - Mentse ?"
+    IDS_NEV_MEGV            "A névlista megváltozott. - Mentse ?"
+    IDS_FOLY_IMP_S          "Folyassa az importálást ?"
+    IDS_TRL_MEGER_S         "Valóban törölni akarja ?"
+    IDS_ATNEV_KRD_S         "Valóban át akarja nevezni\n %s -t\n %s-re ?"
+    IDS_ATVNEV_KRD_S        "Valóban át akarja nevezni\n %s %s -t\n %s %s -re ?"
+    IDS_VNEV_MEGV_S         "A versenyzõnév lista megváltozott. - Mentse ?"
+    IDS_PONT_FLV_S          "Pontozások felvétele"
+    IDS_PONTOZHF_S          "Pontozás a helyezés függvényében"
+    IDS_PNT_MGV_S           "A pontozás megváltozott. - Mentse ?"
+    IDS_PNT_SOR_NERV_S      "A megadott sor érvénytelen."
+    IDS_N_TRLHETO_S         " - Nem törölhetõ.\nSzerepel az adatbázisban."
+    IDS_SZEZ_MEGV           "A szezon megváltozott. - Mentse ?"
+    IDS_SZEZFELV_S          "Szezonok felvétele"
+    IDS_NINCS_PONTOZAS_S    "A szezonhoz nincs érvényes pontozás hozzárendelve !"
+    IDS_NVZL_MGV_S          "A nevezési lista megváltozott. - Mentse ?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MEMF_PRBL_SZOV      "Memóriafoglalási probléma"
+    IDS_FELE_PONT_SZOV      "Fele pont"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NVZL_NTAL_S         "Ehhez a nevezési lista kulcshoz nem talált bejegyzést :"
+    IDS_LGYK_MGV_S          "A leggyorsabb köreredmény megváltozott - Mentse ?"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\proba13.rc2"  // non-App Studio edited resources
+
+#include "afxres.rc"  	// Standard components
+#include "afxprint.rc"  // printing/print preview resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,264 @@
+// dbpontoz.pc
+
+#include "stdafx.h"
+
+//#include <string.h>
+
+#include "ensqlcam.h"
+
+//#include "alaptip.h"
+#include "pontozas.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long CPontozas::SQL_PontBetolt()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    struct sql_pont
+    {
+      unsigned n_kulcs ;
+      unsigned n_helyezes ;
+      unsigned n_pontszam ;
+    } pontozas_tomb[2*MAX_ERTEKELT] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int       nFetch, i ;
+  int       nCiklFelsHat ;
+  pontadat* pPontAdat ;
+
+  long l_SQLCODE  ;
+
+/*  EXEC SQL SET TRANSACTION READ ONLY ; mert a vegen COMMIT/ROLLBACK van ! */
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  EXEC SQL PREPARE select_pont_utas
+           FROM "SELECT kulcs, helyezes, pontszam FROM pontozas" ;
+
+  /* Ha nics hiba az utasitasokban, johet az erdemi resz */
+  EXEC SQL DECLARE select_pont_kurz CURSOR FOR select_pont_utas ;
+
+  EXEC SQL OPEN select_pont_kurz ;
+
+  nFetch = 0 ;
+
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_pont_kurz INTO :pontozas_tomb ;
+/* EXEC SQL FOR :array_size FETCH */
+
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( Lookup( pontozas_tomb[i].n_kulcs, pPontAdat) == FALSE )
+      {
+        if ( (pPontAdat = new pontadat()) == NULL )
+        {
+          SQL_SQLCAFeltolt() ;
+
+          EXEC SQL CLOSE select_pont_kurz ;
+
+          EXEC SQL COMMIT WORK ;
+
+          return -1 ;
+        }
+
+        SetAt( pontozas_tomb[i].n_kulcs, pPontAdat) ;
+      }
+
+      /* A helyezesek, mint tombindexek 0-tol indulnak, mig az adatbazisban 1-tol */
+      (*pPontAdat)[pontozas_tomb[i].n_helyezes-1] = pontozas_tomb[i].n_pontszam ;
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+  for ( i = 0 ; i < nCiklFelsHat ; i++ )
+  {
+    if ( Lookup( pontozas_tomb[i].n_kulcs, pPontAdat) == FALSE )
+    {
+      if ( (pPontAdat = new pontadat()) == NULL )
+      {
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_pont_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      SetAt( pontozas_tomb[i].n_kulcs, pPontAdat) ;
+    }
+
+    /* A helyezesek, mint tombindexek 0-tol indulnak, mig az adatbazisban 1-tol */
+    (*pPontAdat)[pontozas_tomb[i].n_helyezes-1] = pontozas_tomb[i].n_pontszam ;
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_pont_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_pont_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CPontozas::SQL_PontINSERT( pontadat& sUjPontAdat, unsigned* puiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+    struct sql_pont
+    {
+      unsigned n_kulcs ;
+      unsigned n_helyezes ;
+      unsigned n_pontszam ;
+    } pontozas_tomb[MAX_ERTEKELT] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int i ;
+  long l_SQLCODE  ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  EXEC SQL SELECT seq_pont.NEXTVAL INTO :n_kulcs FROM seq ;
+
+  for  ( i = 0 ; i < MAX_ERTEKELT ; i++ )
+  {
+    pontozas_tomb[i].n_kulcs    = n_kulcs ;
+    pontozas_tomb[i].n_helyezes = i + 1 ;
+    pontozas_tomb[i].n_pontszam = sUjPontAdat[i] ;
+  }
+
+  EXEC SQL INSERT INTO pontozas VALUES( :pontozas_tomb) ;
+
+  *puiKulcs = n_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CPontozas::SQL_PontDELETE( unsigned uiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+
+  n_kulcs = uiKulcs ;
+
+  EXEC SQL SELECT pontozas FROM szezon WHERE pontozas = :n_kulcs ;
+
+  /* Torles csak akkor, ha meg nem szerepel egy szezonban sem ! */
+  if ( sqlca.sqlcode == 1403 )
+  {
+    EXEC SQL DELETE FROM pontozas WHERE kulcs = :n_kulcs ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CPontozas::SQL_PontUPDATE( unsigned uiKulcs, pontadat& sUjPontAdat)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_kulcs ;
+    unsigned n_helyezes ;
+    unsigned n_pontszam ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int i ;
+  long l_SQLCODE  ;
+
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND goto sql_hiba ;
+
+  EXEC SQL PREPARE update_pont_utas
+           FROM "UPDATE pontozas SET pontszam = :n_pontszam WHERE kulcs = :n_kulcs AND helyezes = :n_helyezes" ;
+
+  n_kulcs = uiKulcs ;
+  for  ( i = 0 ; i < MAX_ERTEKELT ; i++ )
+  {
+    /* A helyezesek, mint tombindexek 0-tol indulnak, mig az adatbazisban 1-tol */
+    n_helyezes = i + 1 ;
+    n_pontszam = sUjPontAdat[i] ;
+
+    EXEC SQL EXECUTE update_pont_utas USING :n_pontszam, :n_kulcs, :n_helyezes ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}

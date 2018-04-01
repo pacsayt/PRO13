@@ -1,0 +1,352 @@
+olvassel.txt
+
+PRO13_107 - Az adatbazis verzio
+
+2001.03.25 A befuton esett nevezesi lista valtoztatasokat a leggyorsabb
+           korben is kijelzi
+
+2001.03.18 f1packag.sql rs/befupdate() modositva, az adottnagydijon
+           masutt elofordulo nevezesi lista kulcsot atirja
+
+2001.03.11 A leggyorsabb korert, ill. edzeselsosegert jaro pontot
+           figyelembe veszi. Rajtsorrend UPDATE modositva. A nvzl
+           kulcsot masutt is modositani kene az adott futamon 
+
+2001.03.04 Szezon ee. lggyk. pontszamot lehet utolag modositani,
+           A leggyorsabb korert, ill. edzeselsosegert jaro pontot
+           tobbe-kevesbe veszi csak figyelembe
+
+2001.02.25 Fele pontszam figyelembe veve.
+           Rajtsorrend bejegyzest nem lehet modositani.
+           Szezon ee. lggyk. pontszamot nem lehet utolag modositani,
+           gyanus, hogy nagydij torleset sem veszi figyelembe.
+
+2001.02.18 2001.02.11 hibak korrigalva, a fele pontszam figyelembe vetelenek
+           kezdetei, folosleges file-ok eltavolitasa a projektbol
+
+2001.02.11 PillAll & VBSzereples minden szogbol jonak nez ki. Versenyzo
+           kulcsok csokkeno rendezese.
+           RSBeffel & Egyebek :
+           - Felvesz utan Cancel eseten is felveszi a RSBeffel bejegyzest
+           - Egyebek utan SQL_KulNvzlNdon semmit sem hoz vissza
+
+2001.02.04 A pill.all. lekerdezesnel kulonbozo nevek eseten a nevtipusok
+           szerint csoportosit a pontszamitasnal. bef_kurz_megny,
+           edzels_kurz_megny, lggykr_kurz_megny uj fv-ekkel az ee. es
+           lggykr. kurzorokat csak > 0 pontszameseten nyitja meg.
+           Kivalasztott nevek eseten hibas az elhozas.
+
+2001.01.28 Az alanti hiba kijavitva. Problema meg, hogy nem cs., v., pill.
+           all. lekerdezesnel e ket nev szerinti pontszam jelenik meg.
+           2001.01.03-n jelzett kirajzolasi hiba fennall.
+
+2001.01.14 Ha pill_all_cs elhozza az utolso adatot, pill_all_v NOT FOUND-ra
+           fut ...
+
+2001.01.09 Nemzetiseg es motor nevek szerin is valogat. Ossz eredmeny lekerde-
+           zese csapatra (Dallara/1992 3/1 pont) nem hoz vissza semmit.
+
+2001.01.07 A kijelolt neveket nem modositja a SQL_PillAll fv. + memory leak
+           javitva. Egyeb nevekre, mint v. cs. is mukojon elk. jav.
+
+2001.01.03 A VB szereples hibara fut pl. ha Senna van csak kijelolve, mert
+           SQL_PillAll ket nevet ad vissza. A 2. helyen persze szemet van.
+           A kirajzolast vegzo osztalyok hibasan mukodnek, ha a gyokerelem
+           es az azt koveto koze kene beszurni valamit az alapszintnel magasabb
+           szinten.
+
+2001.01.01 CRBBejegyzes::MegjBeall javitva
+           CLekerdDlg::PillAllLekerd : pPillAll->Feltolt() felhivas javitva
+           szez_pill_all_v/szez_pill_all_cs-ben a kurzor figyelembe veszi
+           a diszkvalifikaciot is
+
+2000.12.17 Memoriakezelesi hiba javitva, helyezes szerinti nevsorrend a
+           szez_pill_all/szez_eredm_elh-ban (-01405:fetched NULL value)
+
+2000.12.10 szez_pill_all/szez_eredm_elh, SQL_PillAll modositva, 
+           Kivalasztott nevek eseten memoriakezelesi hiba.
+
+2000.12.03 szez_pill_all/szez_eredm_elh-ban nevek megadasa eseten az utolso
+           eredmeny pozicioja megjegyezve. A nev kulcsok rendezesi iranya
+           megegyezo a tarolt eljarasban es a lekerddl-ben.
+
+2000.11.26 SQL_PillAll kivalasztott nevekre copy/paste hiba.
+           A nevek tombbe hulyeseg kerul
+
+2000.11.19 A PillAll lekerdezes kivalasztott nevek elhozatalara modositva.
+           Jelenleg ugyan elhoz, de nem jelez ki semmit.
+
+2000.11.12 A PillAll lekerdezes utolsot is kiirja.
+           A kivalasztott nevek elhozatala zavaros.
+
+2000.11.05 A PillAll lekerdezes helyes eredmenyt szolgaltat (az 1990-es
+           szezonra), leszamitva, hogy a szezon utolsot nem irja ki.
+           Nemletezo rajtsorrend esetenn uj elem felvitelet a befutoba
+           1403 No data found-dal utasitja el: scott.forma1 188.sor
+
+2000.11.01
+2000.10.30
+2000.10.29
+           PillAllLekerd()-ben nahany memory leak elharitva, a pKezd...
+           korrekt felszabaditasa meg megoldatlan
+
+           szez_pill_all_v-ben az ures szezonbol eredo hiba javitva
+           meg nem megy :
+           begin szez_all.szez_pill_all_v(1995) ; end;
+           ERROR at line 1:
+           ORA-01403: no data found
+           ORA-06512: at "SCOTT.SZEZ_ALL", line 226
+
+           szez_eredm_elhoz tombindexeles javitva.
+           Hiba az 1994-es szezonnal : nevek = 0 db, eredmenyek = 1 db
+
+2000.10.15 SQL_PillAll 1990-re legalabbis hiba nelkul lefut. Hiba van 1991, 1992,
+           1993, 1994.
+
+2000.10.15 SQL_PillAll fv kivalasztott nevek beszamitott eredmenyeinek elhozasa
+           besz_eredm_elhoz : az elhozott tombok merete (kivalasztott neveknel
+           nem josolhato meg melyik nevhez mennyi eredmeny tartozik)
+           (a 82-hoz nem tartozik olvassel bejegyzes)
+
+2000.10.08 SQL_PillAll fv-t at kell dolgozni az osszes szezon adat elhozasanal
+           pl. rossz konstanssal dolgozik stb. ...
+           (szez_all_b.sql-ben az elhozo fv. 1-tol irja a kimeneti host tombot)
+
+2000.09.17 OPEN-ben dinamikus tomb skalarra cserelve, sok lekerdezes mukodni
+           latszik (HolVKiV, LeggyKor,
+
+2000.09.03 Nd. megjelenitese palya helyett. HolVKiV lekerdezesben hibas
+           adatokat hoz el
+
+2000.08.31 A futamgyozelmek, leggyorsabb korok, edzeselsosegek lekerdezeseknel
+           a nagydij irodik ki
+
+2000.08.27 Rengeteg hiba kijavitva a dbglobal.pc-ben + masutt
+           Jelenleg 'Assertion failed'-del akad ki sok lekerdezesnel
+           A 'Futamgyozelmek' lekerdezest Sennara futtatva 'Access violation'
+           jon CDocument::UpdateAllViews-ban
+
+2000.08.15 Linkeles is OK. Nem lett adatokkal futtatva meg.
+
+2000.08.13 Forditas vege; kulonbozo szimbolumokat nem talal
+
+2000.08.06 dbgobal.pc-ben es lekerddl.cpp-ben meg javitani kell (tobbek kozott)
+
+2000.07.16 Pill.all. es VB.szerepl. lekerdezesek lekodolva, a forditas kezdetei
+
+2000.07.09 A CPillAll osztaly uj Feltolt fv-t kapott, PillAll lekeredezes
+           folytatasa
+
+2000.07.02 Sokminden a megjegyzes VARCHAR2-re valo alakitas miatt atirva
+           A pill.all.lekerd. bedolgozasanak folytatasa
+
+2000.07.02 bedolgozasanak folytatasa
+
+2000.06.25 szez_all.sq fordithato : bedolgozasanak kezdetei
+
+2000.06.15 szez_all.sql kezdetei : a szezon pillanatnyi allasanak meghatarozasara
+
+2000.05.28 A pillanatnyi allas meghatarozasanak probafazisa,
+           a rajtsorrend/befuto tablak magjegyzes mezeinek VARCHAR2-re valo atallitasa
+           hogy az adatbaziskezelo is tudjon dolgozni a 'bitekkel'
+
+2000.05.05 SQL_HolVKiV fuggveny kezdetei
+
+2000.04.16 SQL_AltLekerd-ben hasznalt lekerdezes sztring-elemek megallapitasa
+
+2000.04.10 SQL_AltLekerd kezdetei. A lekerdezes(ek) elvi alapvetesei.
+
+2000.04.06 Rs/bef felv ablakban a beszamit-ot adatbazisba irja
+           Elso lepes a lekerdezes atultetese erdekeben
+
+2000.04.02 Memoriakezelesi problema a nvzl felv. ablakban elharitva, 
+           forma1.befuto_update hibas ha az uj szezon egyetlen bejegyzeset kell
+           masra modositani, es a szezonhoz nincs nvzl. bej.
+
+2000.03.30 Fele pontszam a teljes befutora kiterjesztve, EXEC SQL FOR :n_meret UPDATE
+           A kisegito ablak fele pontszamtartalma helyesen allitodik be
+
+2000.03.28 Memory leak megszuntetve, a fele pontot nem veszi fel minden bejegyzeshez
+
+2000.03.23 A lenti hibaelharitas lekodolva, azonban utkozo bej.-t is felvesz 
+           a rs.-be
+
+2000.03.19 forma1 package-be RAISE_APPLICATION_ERROR() szolgaltat visszteresi
+           erteket az egyszeru RETURN-nel ellentetben.Az rs/bef felv ablakban
+           uj nevezesi lista felvetele utan ha hiba van, a felvett nvzl nem
+           torlodik, rs. bej. hianyaban elerhetetlen lesz !
+
+2000.03.15 CLegyKorFlv::AtlSebBeo() meg nem egeszen ugy mukodik, mint kene...
+
+
+2000.03.12 SQL_MegjUPDATE, SQL_FelePontBeall uj fuggvenyek
+
+
+2000.03.09 rajts_delete atvetele a forma1 package-be
+
+2000.03.05 f1packag.sql-be uj fv-ek felvetele, melyek potoljak a kivett CONSTRAINT
+           eket a megjegyzes = 16 figyelembevetelevel
+
+2000.02.27 A lenti problemat az egyes fuggvenyekbe, tarolt eljarasokban probalom
+           megoldani adatbazismodositas(ONSTRAINT) vagy TRIGGER bevezetese helyett
+
+2000.02.22 forma1.befuto_insert() modositva, a szezon nevezesi lista bejegyzesei
+           miatt nem biztos (az elso futam), hogy olyan befuto bejegyzest nem
+           vesz fel, ami nem is kvalifikalta magat
+
+           Felmerult, mint megoldasi lehetoseg : l. *.doc file 2.oldalat
+
+           - triggerben / lekerdezesben megvalositani megjegyzes = 16 figyelembe-
+             vetelevel
+
+           - uj tabla felvetelevel
+             nevezesi_lista    
+             ____________  
+             |kulcs     |
+
+
+
+
+2000.02.22 CLegyKorFlv ablak javitasa - folyt
+
+2000.02.13 CLegyKorFlv ablak javitasa
+
+2000.02.06 rs/bef felvetel ablakban a 'nevezesi lista torol' akciora az LB torlodik,
+           de az adatbazis nem
+
+2000.01.30 forma1.rajts_insert() modositva, 
+           CRajtsBef::SQL_RajtsBefBetolt() hibas: egy letezo sor eseten a tobbi,
+           nevezesi listahoz szuksegeset is beolvassa
+
+2000.01.23 A rajtsorrend inzertalo eljaras hibas: nem lehet a nevezesi listaban
+           szereplo (megjegyzes=16) elemet felvenni
+           forma1.nvzl_keres_krz( rajtszam IN NUMBER, ->
+           forma1.nvzl_keres_krz( rajtsz IN NUMBER, mert a feltetelben
+           nl.rajtszam = rajtszam AND ... rajtszam a nevezesi_lista.rajtszam-ot
+           jelenti, igy a feltetel mindig teljesul (minden rajtszamot elhoz!)
+
+2000.01.18 uk_vs_nmz_cs_m - kiveve : nem erne celt :rajts_insert tarolt eljaras
+           helyette
+
+2000.01.17 Forditas vege, teszt kezdete, a szezon tabla letrehozasanal hiba van
+
+2000.01.16 CFelvSzez osztaly torolve, forditas kezdete
+
+2000.01.09 CRajtsBef, folyt., CEreBeszFlv, CLegyKorFlv modositas megkezdve,
+           CVNevFelv, tovabbi modositas szukseges
+
+2000.01.06 CRajtsBef uj SQL_CRajtsBefDELETE fv., mely torli az egesz rajtsorrendet/
+           befutot (tarolt eljarassal)
+
+2000.01.02 CRajtsBef "kesz", CRSbeffel folyamatban
+           A R/B-bol valo torles, valamint nevezesi listabol valo torles gyanus !
+
+1999.12.22 CRajtsBef::SQL_RajtsBefINSERT, CRajtsBef::SQL_RajtsBefUPDATE atdolgozasa
+           b.sql -> F1PACKAG.SQL, uj tarolt eljaras: rajts_insert
+
+1999.12.19 Uj CONSTRAINT-ek hozzaadasa :
+           rajtsorrend     : uk_rs_sze_ndn_hlyz
+           befuto          : uk_bef_sze_ndn_nvzl, uk_bef_sze_ndn_hlyz
+           leggyorsabb_kor : uk_lgyk_sze_ndn
+
+
+1999.12.14 A rajtsorrend/befuo felvetelevel foglalkozo resz atirasanak folyta-
+           tasa. Dinamikus SQL-t hasznalok a rajtsorrend es befuto tablak kozti
+           kulonbseg miatt
+
+1999.12.04 A rajtsorrend/befuo felvetelevel foglalkozo resz atirasanak folyta-
+           tasa
+
+1999.12.02 A rajtsorrend/befuo felvetelevel foglalkozo resz atirasanak folyta-
+           tasa
+
+1999.11.21 Mas szezonban elofordulo nevezesi lista felvetele ill. ilyenre valo
+           modositas lehetseges. A r/b felvetel atallas kezdetei.
+
+1999.11.07 1999.11.04-alatti hiba javitva
+
+1999.11.04 Nagydij datum modositasa eseten a nagydij szezonon beluli pozicioja
+           valtozhat
+
+1999.10.31 OnOK, OnSzezFelv (stb.) eseten mindenkeppen szeretnem az adatbazisban
+           viszontlatni a teljes szezont, ugy, ahogy az ablakban van (tekintettel
+           mas helyrol valo torlesekre)
+
+1999.10.28 Az alabbi problema megoldasanak kezdetei SQL-szinten
+           szezfelv.cpp szezfelv.h kicserelve PRO13_32-szinttel
+
+1999.10.24 Ha csak a szezon eve van az ablakban, azt ne akarja menteni hiba javitasa
+           folyamatban : m_bUresSzez nem valt be, szezfelv.cpp szezfelv.h kicserelendo
+           Masodik nekifutas : SQL_* fv.-ben : INSERT szezon eve, ha UNIQUE key violated
+           INSERT/UPDATE a tobbit. vizsgalata az ablakban : masvalaki vehetett fel/to-
+           rolhetett szezont 
+
+1999.10.17 13_31 alatti hibak elharitva. UNIQUE problema a nevezesi_lista tablaban:
+           megoldasa az ...INSERT fv.-en belul (l. f1dbletr.sql).
+
+1999.09.26 Teszteles kezdete : CNvzListFelv ablekban a tabulatorokkal baj van, ket
+           szezon kozotti valtasnal valoszinuleg rossz nevezesi lista kulcs - nevezesi
+           lista bejegyzest hasznal, fel nem szabaditott memoria.
+
+1999.09.19 forditas folyt. + SQL kvt. hozzaadasa: forma1 package es nvzl_keres_krz
+           tarolt eljaras letrehozasa
+
+1999.09.13 CNvzListFelv osztaly atirasa (forditas kezd.)
+
+1999.09.12 CNvzListFelv osztaly atirasa (folytatas)
+
+1999.09.09 CNevezLista (fvek elt.) es CNvzListFelv osztaly atirasa (folytatas)
+
+1999.09.05 CNevezLista es CNvzListFelv osztalyok atirasa (folytatas)
+
+1999.08.29 CNevezLista es CNvzListFelv osztalyok atirasa
+
+1999.08.15 package jegre teve, fv( rsz, nd) -> nvzl C-ben megoldva 
+
+1999.07.31 Kiserlet package-dzsel es tarolt eljarassal ...
+
+1999.07.08 CSzezFelv hibak javitva, tobb jelenleg nem ismert ...
+
+1999.07.04 CSzezFelv hibak javitva, szezon evenek felulirasa utan nem l.
+           felvenni
+
+1999.06.30 CSzezon destruktora hibara fut (sscanf), memory leak elharitva,
+           problema van a pontok, legj.besz valtoztatasanal
+
+1999.06.27 Felvett szezont kepes kiirni, de a CSzezon destruktora hibara fut
+
+1999.06.20 Szezon felvetele teszt kezd
+
+1999.06.15 CSzezon, CSzezFelv forditasa kezd
+
+1999.06.13 CSzezFelv folytatasa
+
+1999.06.06 CSzezFelv folytatasa
+
+1999.05.30 CSzezFelv folytatasa
+
+1999.05.20 CSzezon befejezese, CSzezFelv kezdetei
+
+1999.05.16 Szezon folytatasa
+
+1999.05.13 A szezon kezdetei
+
+1999.05.09 Pontozast felvevo ablak atalakitasanak vege (teszt?)
+
+1999.05.02 Pontozast felvevo ablak atalakitasanak kezdete
+
+1999.04.29 A pontozashoz uj osztaly letrehozva
+
+1999.04.27 Az adatbazishoz valo csatlakozas rossz helyen van, es a neveket beolvaso
+           rutin sem olvassa be az utolso osszes%blokkmeret elemet
+
+1999.04.25 1 forditasi hiba hijan tesztelesre kesz
+
+1999.04.18 C(V)Nev adatbaisbol olvas es oda ir, kulon COMMIT/ROLLBACK fv.
+
+1999.04.07 A futtathato verziohoz valo elso lepes
+
+1999.04.04 A CNev adatokat adatbazisbol olvassa
+
+1999.02.28 Szezon metesekor a pontozasi tabla szerepelt bejegyzeset aktualizalja
+           ezaltal a 13-as verzio aktualisabb, mint a 12-es !

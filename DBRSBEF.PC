@@ -1,0 +1,975 @@
+/* dbrsbef.pc */
+
+#include "stdafx.h"
+
+#include <string.h>
+
+#include "ensqlcam.h"
+
+#include "resource.h"
+#include "alaptip.h"
+
+#include "cnev.h"
+#include "cvnev.h"
+#include "nevzlist.h"
+
+#include "idoeredm.h"
+
+#include "rajtsbef.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long CLeggyKor::SQL_LeggyKorBetolt( unsigned nSzezonEve, unsigned nNagydijNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve ;
+    unsigned n_nd_kulcs ;
+
+    struct sql_s_lgykor
+    {
+      unsigned n_nvzl_kulcs ;
+      unsigned n_korben     ;
+      unsigned n_perc       ;
+      unsigned n_masodperc  ;
+      unsigned n_ezrdmsdp   ;
+      float    f_atlseb     ;
+    } lgykor_rekord ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  n_szez_eve = nSzezonEve  ;
+  n_nd_kulcs = nNagydijNev ;
+
+  EXEC SQL SELECT nvzl_kulcs, korben, perc, masodperc, ezrdmsdp, atl_sebesseg
+             INTO :lgykor_rekord
+             FROM leggyorsabb_kor
+             WHERE szezon_eve  = :n_szez_eve AND
+                   nagydij_nev = :n_nd_kulcs ;
+
+  m_uiNvzlKulcs = lgykor_rekord.n_nvzl_kulcs ;
+  m_nKorben     = lgykor_rekord.n_korben     ;
+
+  m_cIdoeredm   = CIdoeredm( 0,
+                             (char)lgykor_rekord.n_perc,
+                             (char)lgykor_rekord.n_masodperc,
+                             (short)lgykor_rekord.n_ezrdmsdp) ;
+
+  m_fAtlSeb     = lgykor_rekord.f_atlseb ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CLeggyKor::SQL_LeggyKorINSERT( unsigned nSzezonEve, unsigned nNagydijNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    struct sql_s_lgykor
+    {
+      unsigned n_szez_eve   ;
+      unsigned n_nd_kulcs   ;
+      unsigned n_nvzl_kulcs ;
+      unsigned n_korben     ;
+      unsigned n_perc       ;
+      unsigned n_masodperc  ;
+      unsigned n_ezrdmsdp   ;
+      float    f_atlseb     ;
+    } lgykor_rekord ;
+
+    char c_megjegyzes[17] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  lgykor_rekord.n_szez_eve = nSzezonEve  ;
+  lgykor_rekord.n_nd_kulcs = nNagydijNev ;
+
+  lgykor_rekord.n_nvzl_kulcs = m_uiNvzlKulcs ;
+
+  /* A rajtsorrend.megjegyzes = NEM_KVALIF (nvzl.bej.) miatt nem epithetek */
+  /* CONSTRAINT (rajtsorrend-leggyorsabb_kor) hasznalatara.                */
+  EXEC SQL SELECT megjegyzes
+             INTO :c_megjegyzes
+             FROM rajtsorrend
+             WHERE szezon_eve  = :lgykor_rekord.n_szez_eve AND
+                   nagydij_nev = :lgykor_rekord.n_nd_kulcs AND
+                   nvzl_kulcs  = :lgykor_rekord.n_nvzl_kulcs ;
+
+  /* Ha nem a nevezesi lista szamara valo bejegyzesrol van szo */
+  /* "Nem nemkvalifikalt". 16 : NEM_KVALIF alaptip.h           */
+  if ( /*c_megjegyzes[1] == '0'*/ c_megjegyzes[4] == '0' )
+  {
+    lgykor_rekord.n_korben    = m_nKorben ;
+    lgykor_rekord.n_perc      = m_cIdoeredm.Perc() ;
+    lgykor_rekord.n_masodperc = m_cIdoeredm.Masodperc() ;
+    lgykor_rekord.n_ezrdmsdp  = m_cIdoeredm.EzrdMsdp() ;
+    lgykor_rekord.f_atlseb    = m_fAtlSeb ;
+
+    EXEC SQL INSERT INTO leggyorsabb_kor
+               VALUES( :lgykor_rekord) ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CLeggyKor::SQL_LeggyKorDELETE( unsigned nSzezonEve, unsigned nNagydijNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve ;
+    unsigned n_nd_kulcs ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  n_szez_eve = nSzezonEve  ;
+  n_nd_kulcs = nNagydijNev ;
+
+  EXEC SQL DELETE FROM leggyorsabb_kor
+             WHERE szezon_eve  = :n_szez_eve AND
+                   nagydij_nev = :n_nd_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CLeggyKor::SQL_LeggyKorUPDATE( unsigned nSzezonEve, unsigned nNagydijNev)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve ;
+    unsigned n_nd_kulcs ;
+
+    unsigned n_nvzl_kulcs ;
+    unsigned n_korben     ;
+    unsigned n_perc       ;
+    unsigned n_masodperc  ;
+    unsigned n_ezrdmsdp   ;
+    float    f_atlseb     ;
+
+    char     c_megjegyzes[17] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  n_szez_eve = nSzezonEve  ;
+  n_nd_kulcs = nNagydijNev ;
+
+  n_nvzl_kulcs = m_uiNvzlKulcs ;
+
+  /* A rajtsorrend.megjegyzes = NEM_KVALIF (nvzl.bej.) miatt nem epithetek */
+  /* CONSTRAINT hasznalatara */
+  EXEC SQL SELECT megjegyzes
+             INTO :c_megjegyzes
+             FROM rajtsorrend
+             WHERE szezon_eve  = :n_szez_eve AND
+                   nagydij_nev = :n_nd_kulcs AND
+                   nvzl_kulcs  = :n_nvzl_kulcs ;
+
+  /* Ha nem a nevezesi lista szamara valo bejegyzesrol van szo !NEM_KVALIF */
+  if ( c_megjegyzes[11] == '0' )
+  {
+    n_korben    = m_nKorben ;
+    n_perc      = m_cIdoeredm.Perc() ;
+    n_masodperc = m_cIdoeredm.Masodperc() ;
+    n_ezrdmsdp  = m_cIdoeredm.EzrdMsdp() ;
+    f_atlseb    = m_fAtlSeb ;
+
+    EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+    EXEC SQL UPDATE leggyorsabb_kor
+               SET nvzl_kulcs   = :n_nvzl_kulcs,
+                   korben       = :n_korben,
+                   perc         = :n_perc,
+                   masodperc    = :n_masodperc,
+                   ezrdmsdp     = :n_ezrdmsdp,
+                   atl_sebesseg = :f_atlseb
+               WHERE szezon_eve  = :n_szez_eve AND
+                     nagydij_nev = :n_nd_kulcs ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+
+long CRajtsBef::SQL_RajtsBefBetolt(eAblTipRsBef enRsBef)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve ;
+    unsigned n_nd_kulcs ;
+
+    /* a rajtsorrend tablaban nincsen ora mezo */
+    struct sql_s_rsbef
+    {
+      unsigned n_nvz_kulcs  ;
+  /*    unsigned n_helyezes   ; */
+      unsigned n_rajtszam   ;
+      unsigned n_ora        ;
+      unsigned n_perc       ;
+      unsigned n_masodperc  ;
+      unsigned n_ezrdmsdp   ;
+      char     c_megjegyzes[17] ;
+    } rsbef_rekord[30] ;
+    /* 30, hogy az esetek nagy reszeben egyszerre elhozzon mindent */
+    /* Sok szeoznban max 26 versenyzo allhatott rajthoz            */
+
+    char pszSelRsbefUtas[250] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  /* Ebbe alakitom at char     c_megjegyzes[16]-ot */
+/*  unsigned short usMegjegyzes ;*/
+
+  int nFetch, i ;
+  int nCiklFelsHat ;
+
+  CRBBejegyzes* pRBBej ;
+  unsigned* pPzNdKlcsTbl ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  n_szez_eve = m_uiSzezEve ;
+  n_nd_kulcs = m_uiNagydKulcs ;
+
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    /* Csak a tenyleges bejegyzeseket, a nevezesi lista szamara beirtakat ne ! */
+    strcpy( pszSelRsbefUtas, "SELECT nvzl_kulcs, rajtszam, 0, perc, masodperc, ezrdmsdp, megjegyzes" \
+                             "  FROM rajtsorrend, nevezesi_lista" \
+                             "  WHERE szezon_eve     = :n_szez_eve AND " \
+                             "        nagydij_nev    = :n_nd_kulcs AND " \
+                             "        kulcs          =  nvzl_kulcs AND " \
+                             "        megjegyzes LIKE ('___________0____') " \
+                             " ORDER BY( helyezes)" ) ;
+  }
+  else
+  {
+    strcpy( pszSelRsbefUtas, "SELECT nvzl_kulcs, rajtszam, ora, perc, masodperc, ezrdmsdp, megjegyzes" \
+                             "  FROM befuto, nevezesi_lista" \
+                             "  WHERE szezon_eve  = :n_szez_eve AND" \
+                             "        kulcs       =  nvzl_kulcs AND" \
+                             "        nagydij_nev = :n_nd_kulcs" \
+                             " ORDER BY( helyezes)" ) ;
+
+  }
+
+  EXEC SQL PREPARE select_rsbef_utas FROM :pszSelRsbefUtas ;
+
+  EXEC SQL DECLARE select_rsbef_kurz CURSOR FOR select_rsbef_utas ;
+
+  EXEC SQL OPEN select_rsbef_kurz USING :n_szez_eve, :n_nd_kulcs ;
+
+  nFetch = 0 ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_rsbef_kurz INTO :rsbef_rekord ;
+
+    /* Ez cikluson belul mindig 30 */
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+    pPzNdKlcsTbl = new unsigned[m_nMeret+nCiklFelsHat] ;
+
+    if ( pPzNdKlcsTbl == NULL )
+      return -1 ;
+
+    /* Atmasoljuk a regit az ideiglenes helyere */
+    memcpy( pPzNdKlcsTbl, m_pPzNdKlcsTbl, m_nMeret*sizeof(unsigned)) ;
+
+    // Toroljuk a regi tombot
+    delete [] m_pPzNdKlcsTbl ;
+    m_pPzNdKlcsTbl = NULL ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      pRBBej = new CRBBejegyzes( (char)rsbef_rekord[i].n_rajtszam,
+                                 CIdoeredm( (char)rsbef_rekord[i].n_ora,
+                                            (char)rsbef_rekord[i].n_perc,
+                                            (char)rsbef_rekord[i].n_masodperc,
+                                            (short)rsbef_rekord[i].n_ezrdmsdp),
+                                            rsbef_rekord[i].c_megjegyzes) ;
+
+      if ( pRBBej == NULL )
+      {
+        delete [] pPzNdKlcsTbl ;
+
+        m_pPzNdKlcsTbl = NULL ;
+        m_nMeret = 0 ;
+
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_rsbef_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      pPzNdKlcsTbl[m_nMeret+i] = rsbef_rekord[i].n_nvz_kulcs ;
+      m_cEredmTabla.SetAt( (void*)rsbef_rekord[i].n_nvz_kulcs, (void*)pRBBej ) ;
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+    m_pPzNdKlcsTbl = pPzNdKlcsTbl ;
+    m_nMeret += nCiklFelsHat ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+
+  if ( nCiklFelsHat > 0 )
+  {
+    pPzNdKlcsTbl = new unsigned[m_nMeret+nCiklFelsHat] ;
+
+    if ( pPzNdKlcsTbl == NULL )
+      return -1 ;
+
+    // Atmasoljuk a regit az ideiglenes helyere
+    memcpy( pPzNdKlcsTbl, m_pPzNdKlcsTbl, m_nMeret*sizeof(unsigned)) ;
+
+    // Toroljuk a regi tombot
+    delete [] m_pPzNdKlcsTbl ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      pRBBej = new CRBBejegyzes( (char)rsbef_rekord[i].n_rajtszam,
+                                 CIdoeredm( (char)rsbef_rekord[i].n_ora,
+                                            (char)rsbef_rekord[i].n_perc,
+                                            (char)rsbef_rekord[i].n_masodperc,
+                                            (short)rsbef_rekord[i].n_ezrdmsdp),
+                                 rsbef_rekord[i].c_megjegyzes) ;
+
+      if ( pRBBej == NULL )
+      {
+        delete [] pPzNdKlcsTbl ;
+
+        m_pPzNdKlcsTbl = NULL ;
+        m_nMeret = 0 ;
+
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_rsbef_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      pPzNdKlcsTbl[m_nMeret+i] = rsbef_rekord[i].n_nvz_kulcs ;
+      m_cEredmTabla.SetAt( (void*)rsbef_rekord[i].n_nvz_kulcs, (void*)pRBBej ) ;
+    }
+
+    m_pPzNdKlcsTbl = pPzNdKlcsTbl ;
+    m_nMeret += nCiklFelsHat ;
+  }
+
+  if ( m_nMeret > 0 )
+  {
+    m_nBlokk = m_nMeret / BLOKK_MERET + 1 ;
+  }
+  else
+  {
+    m_nBlokk = 0 ;
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_rsbef_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_rsbef_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_RajtsBefINSERT(eAblTipRsBef enRsBef,
+                                   unsigned char ucPoz ,
+                                   unsigned uiNvzlKulcs,
+                                   const CRBBejegyzes* pUjBejegyzes)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    /* a rajtsorrend tablaban nincsen ora mezo */
+    unsigned n_szez_eve  ;
+    unsigned n_nd_kulcs  ;
+    unsigned n_nvz_kulcs ;
+    unsigned n_helyezes  ;
+/*    unsigned n_rajtszam   ;*/
+    unsigned n_ora       ;
+    unsigned n_perc      ;
+    unsigned n_masodperc ;
+    unsigned n_ezrdmsdp  ;
+
+    char c_megjegyzes[17] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  if ( pUjBejegyzes == NULL )
+    return -1 ;
+
+  n_szez_eve   = m_uiSzezEve ;
+  n_nd_kulcs   = m_uiNagydKulcs ;
+  n_nvz_kulcs  = uiNvzlKulcs ;
+  n_helyezes   = ucPoz ;
+  n_ora        = (pUjBejegyzes->IdoerC()).Ora()  ;
+  n_perc       = (pUjBejegyzes->IdoerC()).Perc() ;
+  n_masodperc  = (pUjBejegyzes->IdoerC()).Masodperc() ;
+  n_ezrdmsdp   = (pUjBejegyzes->IdoerC()).EzrdMsdp() ;
+  pUjBejegyzes->MegjBeallS( c_megjegyzes) ;
+
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.rajts_insert( :n_szez_eve,
+                             :n_nd_kulcs,
+                             :n_nvz_kulcs,
+                             :n_helyezes,
+                             :n_perc,
+                             :n_masodperc,
+                             :n_ezrdmsdp,
+                             :c_megjegyzes) ;
+
+      END ;
+    END-EXEC;
+  }
+  else
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.befuto_insert( :n_szez_eve,
+                              :n_nd_kulcs,
+                              :n_nvz_kulcs,
+                              :n_helyezes,
+                              :n_ora,
+                              :n_perc,
+                              :n_masodperc,
+                              :n_ezrdmsdp,
+                              :c_megjegyzes) ;
+
+      END ;
+    END-EXEC;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_RajtsBefDELETE(eAblTipRsBef enRsBef,
+                                   unsigned uiNvzlKulcs,
+                                   unsigned char ucPoz )
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve   ;
+    unsigned n_nd_kulcs   ;
+    unsigned n_nvz_kulcs  ;
+    unsigned n_helyezes   ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  n_szez_eve  = m_uiSzezEve ;
+  n_nd_kulcs  = m_uiNagydKulcs ;
+  n_nvz_kulcs = uiNvzlKulcs ;
+  n_helyezes  = ucPoz ;
+
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.rajts_delete( :n_szez_eve,
+                             :n_nd_kulcs,
+                             :n_nvz_kulcs,
+                             :n_helyezes) ;
+
+      END ;
+    END-EXEC;
+  }
+  else
+  {
+    EXEC SQL DELETE FROM befuto
+               WHERE szezon_eve  = :n_szez_eve  AND
+                     nagydij_nev = :n_nd_kulcs  AND
+                     nvzl_kulcs  = :n_nvz_kulcs AND
+                     helyezes    = :n_helyezes ;
+
+    /* Mivel a r/b listaban nem lehetnek lyukak, elobbre kell csusztatni a torolt utan levoket */
+    /* Az utolso elem torlese utan ne akarja elobbrecsusztatni a mogotte levoket : -1403       */
+    if ( ucPoz < m_nMeret )
+    {
+      EXEC SQL UPDATE befuto
+                 SET helyezes = helyezes -1
+                 WHERE szezon_eve = :n_szez_eve  AND
+                       nagydij_nev= :n_nd_kulcs  AND
+                       helyezes   > :n_helyezes ;
+    }
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_RajtsBefDELETE(eAblTipRsBef enRsBef)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    /* a rajtsorrend tablaban nincsen ora mezo */
+    unsigned n_szez_eve   ;
+    unsigned n_nd_kulcs   ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  n_szez_eve = m_uiSzezEve ;
+  n_nd_kulcs = m_uiNagydKulcs ;
+
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.rajts_torol( :n_szez_eve,
+                            :n_nd_kulcs) ;
+      END ;
+    END-EXEC;
+  }
+  else
+  {
+    EXEC SQL DELETE FROM befuto
+               WHERE szezon_eve  = :n_szez_eve AND
+                     nagydij_nev = :n_nd_kulcs ;
+
+    /* Ha a befuto torlodik, a leggyorsabb kor adatokat is torolni kell */
+    EXEC SQL DELETE FROM leggyorsabb_kor
+               WHERE szezon_eve  = :n_szez_eve AND
+                     nagydij_nev = :n_nd_kulcs ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_RajtsBefUPDATE(eAblTipRsBef enRsBef,
+                                   unsigned char ucRegiPoz, unsigned uiRegiNvzlKulcs,
+                                   unsigned char ucPoz, unsigned uiNvzlKulcs,
+                                   const CRBBejegyzes* pUjBejegyzes)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    /* a rajtsorrend tablaban nincsen ora mezo */
+    unsigned n_szez_eve   ;
+    unsigned n_nd_kulcs   ;
+    unsigned n_nvz_kulcs  ;
+    unsigned n_helyezes   ;
+    unsigned n_ora        ;
+    unsigned n_perc       ;
+    unsigned n_masodperc  ;
+    unsigned n_ezrdmsdp   ;
+    char     c_megjegyzes[17] ;
+
+    unsigned n_regi_helyezes ;
+    unsigned n_regi_nvz_kulcs;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  if ( pUjBejegyzes == NULL )
+    return -1 ;
+
+  n_szez_eve   = m_uiSzezEve ;
+  n_nd_kulcs   = m_uiNagydKulcs ;
+  n_nvz_kulcs  = uiNvzlKulcs ;
+
+  n_helyezes   = ucPoz ;
+  n_nvz_kulcs  = uiNvzlKulcs ;
+
+  n_regi_helyezes  = ucRegiPoz ;
+  n_regi_nvz_kulcs = uiRegiNvzlKulcs ;
+
+  n_ora        = (pUjBejegyzes->IdoerC()).Ora()  ;
+  n_perc       = (pUjBejegyzes->IdoerC()).Perc() ;
+  n_masodperc  = (pUjBejegyzes->IdoerC()).Masodperc() ;
+  n_ezrdmsdp   = (pUjBejegyzes->IdoerC()).EzrdMsdp() ;
+  pUjBejegyzes->MegjBeallS(c_megjegyzes) ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  /* Szerepel-e a megadott versenyzo vagy rajtszam az adott futamon ? */
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.rajts_update( :n_szez_eve,
+                             :n_nd_kulcs,
+                             :n_regi_helyezes,
+                             :n_regi_nvz_kulcs,
+                             :n_helyezes,
+                             :n_nvz_kulcs,
+                             :n_perc,
+                             :n_masodperc,
+                             :n_ezrdmsdp,
+                             :c_megjegyzes) ;
+      END ;
+    END-EXEC;
+  }
+  else
+  {
+    EXEC SQL EXECUTE
+      BEGIN
+        forma1.befuto_update( :n_szez_eve,
+                              :n_nd_kulcs,
+                              :n_regi_helyezes,
+                              :n_regi_nvz_kulcs,
+                              :n_helyezes,
+                              :n_nvz_kulcs,
+                              :n_ora,
+                              :n_perc,
+                              :n_masodperc,
+                              :n_ezrdmsdp,
+                              :c_megjegyzes) ;
+      END ;
+    END-EXEC;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_MegjUPDATE( eAblTipRsBef enRsBef, unsigned uiNvzlKulcs, unsigned uiMegjegyzes)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve   ;
+    unsigned n_nd_kulcs   ;
+    unsigned n_nvzl_kulcs ;
+    /* 17, mert (jelen beallitasban?) igenyli a lezaro 0 */
+    char     c_megjegyzes[17] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int i ;
+  unsigned uiBitMinta ;
+  long l_SQLCODE ;
+  
+  n_szez_eve   = m_uiSzezEve    ;
+  n_nd_kulcs   = m_uiNagydKulcs ;
+  n_nvzl_kulcs = uiNvzlKulcs    ;
+
+  uiBitMinta = 1 ;
+
+  for ( i = 15 ; i >= 0 ; i-- )
+  {
+    if ( uiMegjegyzes & uiBitMinta )
+    {
+      c_megjegyzes[i] = '1' ;
+    }
+    else
+    {
+      c_megjegyzes[i] = '0' ;
+    }
+
+    uiBitMinta = uiBitMinta << 1 ;
+  }
+
+  c_megjegyzes[16] = '\0' ;
+
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  if ( enRsBef == IDD_RAJTS_FELV )
+  {
+    EXEC SQL UPDATE rajtsorrend
+               SET megjegyzes = :c_megjegyzes
+               WHERE szezon_eve  = :n_szez_eve AND
+                     nagydij_nev = :n_nd_kulcs AND
+                     nvzl_kulcs  = :n_nvzl_kulcs ;
+  }
+  else
+  {
+    EXEC SQL UPDATE befuto
+               SET megjegyzes = :c_megjegyzes
+               WHERE szezon_eve  = :n_szez_eve AND
+                     nagydij_nev = :n_nd_kulcs AND
+                     nvzl_kulcs  = :n_nvzl_kulcs ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CRajtsBef::SQL_FelePontBeall(eAblTipRsBef enRsBef, BOOL bFelePont)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned* p_szez_eve   ;
+    unsigned* p_nd_kulcs   ;
+    unsigned* p_nvzl_kulcs ;
+    unsigned* p_megjegyzes ;
+
+    unsigned  n_meret ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  CRBBejegyzes* pRBBej ;
+  unsigned char ucIdx ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  
+  /* A fele pontszamnak csak befutonal van jelentosege */ 
+  if ( enRsBef != IDD_BEF_FELV || m_nMeret == 0 )
+  {
+    return 0 ;
+  }
+
+  n_meret = m_nMeret ;
+
+  p_szez_eve   = new unsigned[m_nMeret] ;
+  p_nd_kulcs   = new unsigned[m_nMeret] ;
+  p_nvzl_kulcs = new unsigned[m_nMeret] ;
+  p_megjegyzes = new unsigned[m_nMeret] ;
+
+  memcpy( p_nvzl_kulcs, m_pPzNdKlcsTbl, m_nMeret*sizeof(unsigned)) ;
+
+  for ( ucIdx = 0 ; ucIdx < m_nMeret ; ucIdx++ )
+  {
+    p_szez_eve[ucIdx] = m_uiSzezEve ;
+    p_nd_kulcs[ucIdx] = m_uiNagydKulcs ;
+
+    if ( Lookup( p_nvzl_kulcs[ucIdx], pRBBej) == TRUE )
+    {
+      p_megjegyzes[ucIdx] = pRBBej->Megj() ;
+    }
+  }
+
+  /* A csak nevezesi lista meghatarozasara szolgalo bejegyzesek  */
+  /* mivel nincsenek benne a befutoban, automatikusan kimaradnak */
+  /*************************************************************************
+   az adatbaziskezelo semilyen szinten nem ismeri a bitenkenti muveleteket !
+   *************************************************************************/
+  if ( bFelePont == TRUE )
+  {
+    EXEC SQL FOR :n_meret
+             UPDATE befuto
+               SET megjegyzes = SUBSTR(megjegyzes, 1, 12) || '1' || SUBSTR(megjegyzes, 14, 16)
+               WHERE szezon_eve  = :p_szez_eve AND
+                     nagydij_nev = :p_nd_kulcs AND
+                     nvzl_kulcs  = :p_nvzl_kulcs ;
+  }
+  else
+  {
+    EXEC SQL FOR :n_meret
+             UPDATE befuto
+               SET megjegyzes = SUBSTR(megjegyzes, 1, 12) || '0' || SUBSTR(megjegyzes, 14, 16)
+               WHERE szezon_eve  = :p_szez_eve AND
+                     nagydij_nev = :p_nd_kulcs AND
+                     nvzl_kulcs  = :p_nvzl_kulcs ;
+  }
+
+  delete [] p_szez_eve    ;
+  delete [] p_nd_kulcs    ;
+  delete [] p_nvzl_kulcs  ;
+  delete [] p_megjegyzes  ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  delete [] p_szez_eve    ;
+  delete [] p_nd_kulcs    ;
+  delete [] p_nvzl_kulcs  ;
+  delete [] p_megjegyzes  ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}

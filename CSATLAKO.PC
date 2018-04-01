@@ -1,0 +1,66 @@
+/* csatlako.pc */
+
+/* Ha #include "stdafx.h" sqlexd definicioja (precompiler altal kozvetlen
+   a file elejen) es felhasznalasa (barmely EXEC SQL utasitas) koze kerul,
+   az sqlexd tipust a kesobbiekben nem ismeri, mert mindent atugor a stdafx
+   utan, mondvan az elo lett mar forditva !
+   Megoldas(?):
+   - Automatic use /Not using of precompiled headers bekapcsolasa
+   - #include "stdafx.h" manualis athelyezese a *.cpp file legelejere
+*/
+
+#include "stdafx.h"
+
+#include <string.h>
+
+#include "ensqlcam.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long SQL_Csatlakozas(const char* pszNev, const char* pszJelszo)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    VARCHAR username[80] ;
+    VARCHAR password[80] ;
+
+  EXEC SQL END DECLARE SECTION;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  if ( strlen((char *)pszNev) >= 80 || strlen((char *)pszJelszo) >= 80 )
+    return sqlca.sqlcode ;
+
+  /* Connect to ORACLE. */
+  strcpy((char *)username.arr, pszNev) ;
+  username.len = (short) strlen((char *)username.arr) ;
+
+  strcpy((char *)password.arr, pszJelszo) ;
+  password.len = (short) strlen((char *)password.arr) ;
+
+  EXEC SQL CONNECT :username IDENTIFIED BY :password ;
+
+  EXEC SQL COMMIT WORK ;
+
+  SQL_SQLCAFeltolt() ;
+
+  return sqlca.sqlcode ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  EXEC SQL ROLLBACK WORK RELEASE ;
+
+  return sqlca.sqlcode ;
+}
+
+void SQL_Kilepes()
+{
+  EXEC SQL ROLLBACK WORK RELEASE ;
+}

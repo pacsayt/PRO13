@@ -1,0 +1,1025 @@
+// dbnvzlst.pc
+
+#include "stdafx.h"
+
+#include "ensqlcam.h"
+
+#include "resource.h"
+
+#include "alaptip.h"
+#include "nevzlist.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long CNevezLista::SQL_NvzlstBetolt( unsigned uiSzezon)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve  ;
+    unsigned n_ElsoNagydij ;
+
+    struct sql_s_nvzlst
+    {
+      unsigned n_nvzl_kulcs ;
+      unsigned n_rajtszam   ;
+      unsigned n_vers_nev   ;
+      unsigned n_nemz_nev   ;
+      unsigned n_csapat_nev ;
+      unsigned n_motor_nev  ;
+    } nvzlst_rekord[200] ;
+    /* 200, mert minden rajtsorrend bejegyzeshez kapunk egy elemet */
+
+/*    char  c_kamu_datum[13] ;*/
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int i, nFetch, nCiklFelsHat ;
+  CNvzSor* pCNvzSor ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  m_uiSzezon = uiSzezon ;
+
+  /* Az ev megadasa a kurzor es a kovetkezo SELECT szamara : */
+  n_szezon_eve = uiSzezon ;
+
+  EXEC SQL SELECT nagydij_nev INTO :n_ElsoNagydij
+             FROM nagydijak
+             WHERE datum = (SELECT MIN( datum)
+                              FROM nagydijak
+                              WHERE szezon_eve = :n_szezon_eve) ;
+
+/*
+  EXEC SQL SELECT SELECT MIN( datum), nagydij_nev
+             INTO :c_kamu_datum, :n_ElsoNagydij
+             FROM nagydijak
+             WHERE szezon_eve = :n_szezon_eve ;
+*/
+
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  m_uiElsoNagydij = n_ElsoNagydij ;
+
+  EXEC SQL DECLARE select_nvzl_kurz CURSOR FOR
+    SELECT n.kulcs, n.rajtszam, n.versenyzo, n.nemzetiseg, n.csapat, n.motor
+      FROM nevezesi_lista n, rajtsorrend r
+      WHERE r.szezon_eve = :n_szezon_eve  AND
+            r.nvzl_kulcs = n.kulcs ;
+
+  EXEC SQL OPEN select_nvzl_kurz ;
+
+  nFetch = 0 ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_nvzl_kurz INTO :nvzlst_rekord ;
+
+    /* Ez a cikluson belul mindig 200 ! */
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( Lookup( nvzlst_rekord[i].n_nvzl_kulcs, pCNvzSor) == FALSE )
+      {
+        pCNvzSor = new CNvzSor( nvzlst_rekord[i].n_rajtszam,
+                                nvzlst_rekord[i].n_vers_nev,
+                                nvzlst_rekord[i].n_nemz_nev,
+                                nvzlst_rekord[i].n_csapat_nev,
+                                nvzlst_rekord[i].n_motor_nev) ;
+
+        if ( pCNvzSor == NULL )
+        {
+          SQL_SQLCAFeltolt() ;
+
+          EXEC SQL CLOSE select_nvzl_kurz ;
+
+          EXEC SQL COMMIT WORK ;
+
+          return -1 ;
+        }
+
+        SetAt( nvzlst_rekord[i].n_nvzl_kulcs, pCNvzSor) ;
+      }
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+
+  for ( i = 0 ; i < nCiklFelsHat ; i++ )
+  {
+    if ( Lookup( nvzlst_rekord[i].n_nvzl_kulcs, pCNvzSor) == FALSE )
+    {
+      pCNvzSor = new CNvzSor( nvzlst_rekord[i].n_rajtszam,
+                              nvzlst_rekord[i].n_vers_nev,
+                              nvzlst_rekord[i].n_nemz_nev,
+                              nvzlst_rekord[i].n_csapat_nev,
+                              nvzlst_rekord[i].n_motor_nev) ;
+
+      if ( pCNvzSor == NULL )
+      {
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_nvzl_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      SetAt( nvzlst_rekord[i].n_nvzl_kulcs, pCNvzSor) ;
+    }
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_nvzl_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_nvzl_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlstTorol()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+    unsigned n_rs_bej_db  ;
+    unsigned n_torlendo_db;
+
+    struct sql_s_trl_nvzkl
+    {
+      unsigned n_nvzl_kulcs ;
+    } nvzkl_rekord[200] ;
+
+    struct sql_s_trl_dat
+    {
+      unsigned n_szezon_eve ;
+    } dat_rekord[200] ;
+
+    /* 200, mert minden rajtsorrend bejegyzeshez kapunk egy elemet */
+    /* Az n_szezon_eve majd tkeppen a DELETE-nel kell, ahol skalar */
+    /* valtozot nem lehet megadni (tombbel valo torles)            */
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int nFetch ;
+  long l_SQLCODE ;
+
+  n_szezon_eve = m_uiSzezon ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  /* megjegyzes:alaptip.h : NEM_KVALIF */
+  EXEC SQL SELECT COUNT(*) INTO :n_rs_bej_db
+             FROM rajtsorrend
+             WHERE szezon_eve =  :n_szezon_eve AND
+                   megjegyzes LIKE ('___________0____') ;
+
+  EXEC SQL WHENEVER NOTFOUND DO break ;
+
+  if ( n_rs_bej_db == 0 )
+  {
+    /* A sima eset : nincs 'igazi' bejegyzes -> mind torolheto */
+    /* Ha nincs tenyleges eredmeny, mindegyik nevezesi lista   */
+    /* sorbol csak egy lehet (?)                               */
+    EXEC SQL DECLARE szez_nvzl_kiv_krz CURSOR FOR
+      SELECT szezon_eve, nvzl_kulcs
+        FROM rajtsorrend
+        WHERE szezon_eve = :n_szezon_eve ;
+
+    EXEC SQL OPEN szez_nvzl_kiv_krz ;
+
+    EXEC SQL SAVEPOINT nvzl_torol_sp ;
+
+    nFetch = 0 ;
+
+    while ( TRUE )
+    {
+      EXEC SQL FETCH szez_nvzl_kiv_krz INTO :dat_rekord, :nvzkl_rekord ;
+
+      nFetch = sqlca.sqlerrd[2] ;
+
+      EXEC SQL DELETE FROM rajtsorrend
+                 WHERE szezon_eve = :dat_rekord AND
+                       nvzl_kulcs = :nvzkl_rekord ;
+
+      /* Allitolag ha valamely tombelemet nem talalja, az nem okoz hibat... */
+      EXEC SQL DELETE FROM nevezesi_lista
+                 WHERE kulcs = :nvzkl_rekord ;
+    }
+
+    n_torlendo_db = sqlca.sqlerrd[2] - nFetch ;
+
+    EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+    EXEC SQL FOR :n_torlendo_db
+             DELETE
+               FROM rajtsorrend
+               WHERE szezon_eve = :dat_rekord   AND
+                     nvzl_kulcs = :nvzkl_rekord ;
+
+    EXEC SQL FOR :n_torlendo_db
+             DELETE
+               FROM nevezesi_lista
+               WHERE kulcs = :nvzkl_rekord ;
+
+    EXEC SQL CLOSE szez_nvzl_kiv_krz ;
+
+    SQL_SQLCAFeltolt() ;
+
+    l_SQLCODE = sqlca.sqlcode ;
+
+/*    EXEC SQL COMMIT TO SAVEPOINT nvzl_torol_sp ; csak ROLLBACK-et lehet  ??? */
+
+    return l_SQLCODE ;
+  }
+
+  return -1 ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_nvzl_kurz ;
+
+  /* Ha a legelso SELECT-ben hiba van, ne szoljon bele a hianyzo */
+  /* SAVEPOINT-bol szarmazo hiba                                 */
+  EXEC SQL ROLLBACK TO SAVEPOINT nvzl_torol_sp ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlstINSERT( CNvzSor* pNvzSor, unsigned* pKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+
+    unsigned n_elso_nd_kulcs ;
+    unsigned n_nvzl_kulcs ;
+
+    unsigned n_nvzl_elof_db ;
+    short    ind_nvzl_elof_db ;
+
+    unsigned n_legmag_hlyz ;
+
+    struct sql_s_nvzlst
+    {
+      unsigned n_rajtszam   ;
+      unsigned n_vers_nev   ;
+      unsigned n_nemz_nev   ;
+      unsigned n_csapat_nev ;
+      unsigned n_motor_nev  ;
+    } nvz_sor ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+/*  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ; */
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL SELECT seq_nvzl.NEXTVAL INTO :n_nvzl_kulcs FROM seq ;
+
+  n_szezon_eve = m_uiSzezon ;
+
+  nvz_sor.n_rajtszam = pNvzSor->uiRajtszam  ;
+  nvz_sor.n_vers_nev = pNvzSor->uiVersenyzo ;
+  nvz_sor.n_nemz_nev = pNvzSor->uiNemz      ;
+  nvz_sor.n_csapat_nev = pNvzSor->uiCsapat  ;
+  nvz_sor.n_motor_nev = pNvzSor->uiMotor    ;
+
+  /* A nevezesi lista sor felvetele */
+  EXEC SQL INSERT INTO nevezesi_lista
+             VALUES ( :n_nvzl_kulcs, :nvz_sor) ;
+
+  /* Ha mar van ilyen nevezesi lista felveve, mi a kulcsa ? */
+  if ( sqlca.sqlcode == -1 )
+  {
+    /* Az elozo INSERT ota le is torolhettek !                      */
+    EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+    EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+    EXEC SQL SELECT kulcs
+               INTO :n_nvzl_kulcs
+               FROM nevezesi_lista
+               WHERE rajtszam  = :nvz_sor.n_rajtszam   AND
+                     versenyzo = :nvz_sor.n_vers_nev   AND
+                     nemzetiseg= :nvz_sor.n_nemz_nev   AND
+                     csapat    = :nvz_sor.n_csapat_nev AND
+                     motor     = :nvz_sor.n_motor_nev ;
+
+    EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+    EXEC SQL SELECT COUNT(*)
+               INTO :n_nvzl_elof_db
+               FROM rajtsorrend
+               WHERE szezon_eve = :n_szezon_eve AND
+                     nvzl_kulcs = :n_nvzl_kulcs ;
+
+    /* Ez a nevezesi lista sor mar szerepel a szezonban !           */
+    if ( n_nvzl_elof_db != 0 )
+    {
+      *pKulcs = n_nvzl_kulcs ;
+
+      SQL_SQLCAFeltolt() ;
+
+      l_SQLCODE = sqlca.sqlcode ;
+
+      return l_SQLCODE ;
+    }
+  }
+
+  /* Ha meg nem volt ilyen nevezesi lista sor felveve, nem          */
+  /* szerepelhet a rajtsorrend tablaban sem                         */
+
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  /* Mert mindig az elso nagydij kulcsaval szerepel a bejegyzes     */
+  /* a rajtsorrend tablaban a nevezesi lista meghatarozasahoz       */
+  if ( m_uiElsoNagydij == 0 )
+  {
+    EXEC SQL SELECT nagydij_nev INTO :n_elso_nd_kulcs
+               FROM nagydijak
+               WHERE datum = (SELECT MIN( datum)
+                                FROM nagydijak
+                                WHERE szezon_eve = :n_szezon_eve) ;
+
+    m_uiElsoNagydij = n_elso_nd_kulcs ;
+  }
+  else
+  {
+    /* Az n_elso_nd_kulcs valtozot inicializalni kell !             */
+    n_elso_nd_kulcs = m_uiElsoNagydij ;
+  }
+
+  /* Mivel a rajtsorrend tablaban a szezon egy nagydijan egy        */
+  /* helyezes csak egyszer fordulhat elo (uk_rs_sze_ndn_hlyz)       */
+  /* meg kell keresni a legmagasabb ureset                          */
+  EXEC SQL SELECT MAX( helyezes)
+             INTO :n_legmag_hlyz INDICATOR :ind_nvzl_elof_db
+             FROM rajtsorrend
+             WHERE szezon_eve  = :n_szezon_eve AND
+                   nagydij_nev = :n_elso_nd_kulcs ;
+
+   if ( ind_nvzl_elof_db == -1 )
+   {
+     /* Meg egyetlen bejegyzes sincs a rajtsorrend tablaban (NULL)   */
+     n_legmag_hlyz = 0 ;
+   }
+
+/* Ha sok probalkozas volt, lehet, hogy 99-nel nagyobb szam jon ki...*/
+/* Itt lehetne meg masik nagydijjal probalkozni ekkor ...            */
+
+  /* Az uj nevezesi lista kulccsal, a hozza tartozo elso nagydijjal  */
+  /* de NEM_KVALIF megjegyzessel uj rajtsorrend bejegyzes(rajtsbef.h)*/
+  /* n_elso_nd_kulcs mar korabban beallitva, a MAX( helyezes)-hez    */
+  n_legmag_hlyz++ ;
+
+  EXEC SQL INSERT INTO rajtsorrend
+             VALUES ( :n_szezon_eve, :n_elso_nd_kulcs, :n_nvzl_kulcs,
+                      :n_legmag_hlyz, 0, 0, 0,
+                      '___________1____' ) ;
+
+  *pKulcs = n_nvzl_kulcs ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlstDELETE( unsigned uiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_nvzl_kulcs ;
+    unsigned n_szezon_eve ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  n_nvzl_kulcs = uiKulcs    ;
+  n_szezon_eve = m_uiSzezon ;
+
+  /* Ha mar a feluletrol ez a kulcs erkezik, biztos van hozza legalabb   */
+  /* rajtsorrend bejegyzes NEM_KVALIF megjegyzessel, e sorok torlese     */
+  /* elott nincs ertelme a nevezesi_lista-bol torolni                    */
+  EXEC SQL DELETE FROM rajtsorrend
+             WHERE nvzl_kulcs = :n_nvzl_kulcs AND
+                   szezon_eve = :n_szezon_eve AND
+                   megjegyzes  LIKE ('___________1____') ;
+
+  /* ha mas szezonban is elofordul a nevezes lista kulcs,akkor nem szabad*/
+  /* (es nem is lehet) torolni a nevezesi_lista tablabol, hanem csak a   */
+  /* rajtsorrend tablabol a bejegyzest. A NOTFOUND azt is jelentheti,    */
+  /* hogy van tenyleges bejegyzes.                                       */
+  if ( sqlca.sqlcode == 0 )
+  {
+    /* Ha a kovetkezo utasitas hibara fut, az azt jelenti, hogy mas      */
+    /* szezonban vagy az adott szezonban kihagyassal elofordul a kerdeses*/
+    /* nevezesi lista kulcs. Ez nem hiba, mert az adott szezonban nem    */
+    /* jelenik meg tobbet ez a nvzl sor                                  */
+    EXEC SQL DELETE FROM nevezesi_lista
+               WHERE kulcs = :n_nvzl_kulcs ;
+
+    SQL_SQLCAFeltolt() ;
+
+    return 0 ;
+  }
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlstUPDATE( CNvzSor* pNvzSor, unsigned* pKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szez_eve   ;
+    unsigned n_nvzl_kulcs ;
+    unsigned n_uj_nvzl_kulcs ;
+ 
+    unsigned n_rajtszam   ;
+    unsigned n_vers_nev   ;
+    unsigned n_nemz_nev   ;
+    unsigned n_csapat_nev ;
+    unsigned n_motor_nev  ;
+
+    unsigned n_darab ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  char cUPD_INS ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  n_szez_eve   = m_uiSzezon ;
+  n_nvzl_kulcs = *pKulcs ; 
+
+  n_rajtszam   = pNvzSor->uiRajtszam  ;
+  n_vers_nev   = pNvzSor->uiVersenyzo ;
+  n_nemz_nev   = pNvzSor->uiNemz      ;
+  n_csapat_nev = pNvzSor->uiCsapat    ;
+  n_motor_nev  = pNvzSor->uiMotor     ;
+
+  EXEC SQL SELECT COUNT(*) INTO :n_darab
+             FROM rajtsorrend
+             WHERE szezon_eve != :n_szez_eve AND
+                   nvzl_kulcs  = :n_nvzl_kulcs ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  if ( sqlca.sqlcode == -1403 )
+  {
+    /* Csak az aktualis szezonban szerepel a valtoztatando nvzl sor */
+
+    EXEC SQL SAVEPOINT uj_nvzl_sor_sp ;
+
+    cUPD_INS = 'U' ;
+
+    EXEC SQL UPDATE nevezesi_lista
+               SET rajtszam   = :n_rajtszam,
+                   versenyzo  = :n_vers_nev,
+                   nemzetiseg = :n_nemz_nev,
+                   csapat     = :n_csapat_nev,
+                   motor      = :n_motor_nev
+               WHERE kulcs = :n_nvzl_kulcs ;
+ 
+    l_SQLCODE = sqlca.sqlcode ;
+  }
+  else
+  {
+    /* Mas szezonban (is) szerepel a valtoztatando nvzl sor */
+
+    EXEC SQL SAVEPOINT uj_nvzl_sor_sp ;
+
+    cUPD_INS = 'I' ;
+
+    /* Uj nevezesi lista kulcs */
+    EXEC SQL SELECT seq_nvzl.NEXTVAL INTO :n_uj_nvzl_kulcs FROM seq ;
+
+    /* Uj nevezesi lista sor felvetele az aktualis szezon szamara */
+    EXEC SQL INSERT INTO nevezesi_lista
+               VALUES ( :n_uj_nvzl_kulcs,
+                        :n_rajtszam,
+                        :n_vers_nev,
+                        :n_nemz_nev,
+                        :n_csapat_nev,
+                        :n_motor_nev
+                      ) ;
+  }
+
+  /* Ennek a hatasa ugyis csak a kovetkezo EXEC SQL-nel ervenyesul */
+  /* Mivel mindket agban van SAVEPOINT, mehet a 'goto sql_hiba_rlb'*/
+  EXEC SQL WHENEVER SQLERROR goto sql_hiba_rlb ;
+
+  /* Ha mar van ilyen nevezesi lista felveve, mi a kulcsa ?        */
+  if ( sqlca.sqlcode == -1 )
+  {
+    if ( cUPD_INS == 'U' )
+    {
+      cUPD_INS = 'H' ;
+    }
+
+    EXEC SQL SELECT kulcs INTO :n_uj_nvzl_kulcs FROM nevezesi_lista
+               WHERE rajtszam  = :n_rajtszam   AND
+                     versenyzo = :n_vers_nev   AND
+                     nemzetiseg= :n_nemz_nev   AND
+                     csapat    = :n_csapat_nev AND
+                     motor     = :n_motor_nev ;
+  }
+
+  /* innentol sikeres INSERT eseten is szukseg van UPDATE-nel viszont nem !             */
+  /* H - hibas UPDATE, mert a fenti SELECT eredmenye megsemmisitene az UPDATE-et        */
+  if ( cUPD_INS == 'H' ||  cUPD_INS == 'I' )
+  {
+    /* Uj, parhuzamos rajtsorrend bejegyzes felvetele az uj nevzl kulccsal              */
+    /* , hogy legyen mire mutasson az UPDATE eredmenye a befuto / leggyorsabb_kor -ben  */
+    EXEC SQL INSERT INTO rajtsorrend
+                    SELECT szezon_eve,
+                           nagydij_nev,
+                           DECODE( nvzl_kulcs, :n_nvzl_kulcs, :n_uj_nvzl_kulcs),
+                           helyezes,
+                           perc, masodperc, ezrdmsdp,
+                           megjegyzes
+                      FROM rajtsorrend
+                      WHERE nvzl_kulcs = :n_nvzl_kulcs AND
+                            szezon_eve = :n_szez_eve ;
+
+    /* A befuto tabla modositasa. */
+    /* Mehet, mert az elozo utasitas letrehozta a szulo elemet */
+    EXEC SQL UPDATE befuto
+               SET nvzl_kulcs = :n_uj_nvzl_kulcs
+               WHERE nvzl_kulcs = :n_nvzl_kulcs AND
+                     szezon_eve = :n_szez_eve ;
+
+    /* A leggyorsabb_kor tabla atallitasa */
+    EXEC SQL UPDATE leggyorsabb_kor
+               SET nvzl_kulcs = :n_uj_nvzl_kulcs
+               WHERE nvzl_kulcs = :n_nvzl_kulcs AND
+                     szezon_eve = :n_szez_eve ;
+
+    /* Mivel a gyerek elemek mar at lettek allitva, a torles mehet */
+    EXEC SQL DELETE FROM rajtsorrend
+               WHERE nvzl_kulcs = :n_nvzl_kulcs AND
+                     szezon_eve = :n_szez_eve ;
+
+    *pKulcs = n_uj_nvzl_kulcs ;
+
+    /* Innen tudja a felhivo fv., hogy a masodik parameterben adat jon vissza */
+    l_SQLCODE = VE_UJ_NVZL_SOR ;
+  }
+
+  return l_SQLCODE ;
+
+sql_hiba_rlb :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL ROLLBACK TO SAVEPOINT uj_nvzl_sor_sp ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlKlcsDELETE( unsigned uiKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+ 
+    unsigned n_nvzl_kulcs ;
+ 
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  n_nvzl_kulcs = uiKulcs ;
+
+  /* Ha a kovetkezo utasitas hibara fut, az azt jelenti, hogy mas      */
+  /* szezonban vagy az adott szezonban kihagyassal elofordul a kerdeses*/
+  /* nevezesi lista kulcs. Ez nem hiba, mert az adott szezonban nem    */
+  /* jelenik meg tobbet ez a nvzl sor                                  */
+  EXEC SQL DELETE FROM nevezesi_lista
+             WHERE kulcs = :n_nvzl_kulcs ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_RszBolNvzlElk(unsigned uiNagydij)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve  ;
+    unsigned n_nagydij ;
+
+    char c_nagydij_datum[13] ;
+
+    struct sql_s_rsz_nd
+    {
+      unsigned n_rajtszam   ;
+      unsigned n_nvzl_kulcs ;
+    } rsz_nd_rekord[600] ;
+    /* 600, mert minden rajtsorrend bejegyzeshez kapunk egy elemet */
+    /* egy szezonban korulbelul 500-550 elem varhato               */
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  int i ;
+  int nFetch ;
+  int nCiklFelsHat ;
+
+  unsigned* pNvzlKlcs ;
+  unsigned  uiElozoRsz, uiElozoNvzlKlcs ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve = m_uiSzezon ;
+  n_nagydij    = uiNagydij  ;
+
+  EXEC SQL SELECT datum INTO :c_nagydij_datum
+             FROM nagydijak
+             WHERE szezon_eve  = :n_szezon_eve AND
+                   nagydij_nev = :n_nagydij ;
+
+  /* nd.datum, */
+  EXEC SQL DECLARE sel_rsz_nd_kurz  CURSOR FOR
+    SELECT nvzl.rajtszam, nvzl.kulcs
+      FROM nagydijak nd, nevezesi_lista nvzl, rajtsorrend rs
+      WHERE rs.szezon_eve = :n_szezon_eve  AND
+            nd.szezon_eve = :n_szezon_eve  AND
+            rs.nvzl_kulcs = nvzl.kulcs     AND
+            rs.nagydij_nev= nd.nagydij_nev AND  /*  \/ ??? */
+            nd.datum <= TO_DATE(:c_nagydij_datum, 'YYYY-MM-DD')
+      ORDER BY nvzl.rajtszam, nd.datum ;
+
+  EXEC SQL OPEN sel_rsz_nd_kurz ;
+
+  nFetch = 0 ;
+
+  EXEC SQL FETCH sel_rsz_nd_kurz INTO :rsz_nd_rekord ;
+
+  if ( sqlca.sqlcode == 0 )
+  {
+    nCiklFelsHat = sqlca.sqlerrd[2] - 2 ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( rsz_nd_rekord[i].n_rajtszam != rsz_nd_rekord[i+1].n_rajtszam )
+      {
+        pNvzlKlcs = new unsigned ;
+
+        if ( pNvzlKlcs != NULL )
+        {
+          *pNvzlKlcs = rsz_nd_rekord[i].n_nvzl_kulcs ;
+          m_cRszElsNdMap.SetAt( WORD(rsz_nd_rekord[i].n_rajtszam), pNvzlKlcs) ;
+        }
+        else
+        {
+          goto sql_hiba ;
+        }
+      }
+    }
+
+    EXEC SQL WHENEVER NOTFOUND do break ;
+
+    nFetch = sqlca.sqlerrd[2] ;
+
+    while ( TRUE )
+    {
+      /* Biztositani kell az egyes FETCH-ekkel elhozott utolso es a kovetkezovel */
+      /* elhozott eleje kozti atmenetet :                                        */
+      uiElozoRsz = rsz_nd_rekord[i].n_rajtszam ;
+      uiElozoNvzlKlcs = rsz_nd_rekord[i].n_nvzl_kulcs ;
+
+      EXEC SQL FETCH sel_rsz_nd_kurz INTO :rsz_nd_rekord ;
+
+      if ( uiElozoRsz != rsz_nd_rekord[0].n_rajtszam )
+      {
+        pNvzlKlcs = new unsigned ;
+
+        if ( pNvzlKlcs != NULL )
+        {
+          *pNvzlKlcs = uiElozoNvzlKlcs ;
+          m_cRszElsNdMap.SetAt( WORD( uiElozoRsz), pNvzlKlcs) ;
+        }
+        else
+        {
+          goto sql_hiba ;
+        }
+      }
+
+      nCiklFelsHat = sqlca.sqlerrd[2] - nFetch - 2 ;
+
+      /* i=0, mert a 0.-at is ossze kell hasonlitani az 1.-vel !                 */
+      for ( i = 0 ; i < nCiklFelsHat ; i++)
+      {
+        if ( rsz_nd_rekord[i].n_rajtszam != rsz_nd_rekord[i+1].n_rajtszam )
+        {
+          pNvzlKlcs = new unsigned ;
+
+          if ( pNvzlKlcs != NULL )
+          {
+            *pNvzlKlcs = rsz_nd_rekord[i].n_nvzl_kulcs ;
+            m_cRszElsNdMap.SetAt( WORD(rsz_nd_rekord[i].n_rajtszam), pNvzlKlcs) ;
+          }
+          else
+          {
+            goto sql_hiba ;
+          }
+        }
+      }
+
+      nFetch = sqlca.sqlerrd[2] ;
+    } /* while */
+
+    /* Ide ugrik a while-ciklusbol, ha nem tud teljes tombnyire valot elhozni */
+    if ( nFetch - sqlca.sqlerrd[2] != 0 )
+    {
+      if ( uiElozoRsz != rsz_nd_rekord[0].n_rajtszam )
+      {
+        pNvzlKlcs = new unsigned ;
+
+        if ( pNvzlKlcs != NULL )
+        {
+          *pNvzlKlcs = uiElozoNvzlKlcs ;
+          m_cRszElsNdMap.SetAt( WORD( uiElozoRsz), pNvzlKlcs) ;
+        }
+        else
+        {
+          goto sql_hiba ;
+        }
+      }
+    }
+    else
+    {
+      /* Ha nincs tobb, akkor az utolsot biztosan fel kell venni ! */
+      pNvzlKlcs = new unsigned ;
+
+      if ( pNvzlKlcs != NULL )
+      {
+        *pNvzlKlcs = uiElozoNvzlKlcs ;
+        m_cRszElsNdMap.SetAt( WORD( uiElozoRsz), pNvzlKlcs) ;
+      }
+      else
+      {
+        goto sql_hiba ;
+      }
+    }
+  } /* if teljes tomb eloszorre */
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch - 2 ;
+
+  for ( i = 0 ; i < nCiklFelsHat ; i++)
+  {
+    if ( rsz_nd_rekord[i].n_rajtszam != rsz_nd_rekord[i+1].n_rajtszam )
+    {
+      pNvzlKlcs = new unsigned ;
+
+      if ( pNvzlKlcs != NULL )
+      {
+        *pNvzlKlcs = rsz_nd_rekord[i].n_nvzl_kulcs ;
+        m_cRszElsNdMap.SetAt( rsz_nd_rekord[i].n_rajtszam, pNvzlKlcs) ;
+      }
+      else
+      {
+        goto sql_hiba ;
+      }
+    }
+  }
+
+  /* Ha az elozo for-ciklus dolgozott, el kell varrni a veget */
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+
+  if ( nCiklFelsHat != 0 )
+  {
+    /* Az utolsot biztosan fel kell venni ! */
+    pNvzlKlcs = new unsigned ;
+
+    if ( pNvzlKlcs != NULL )
+    {
+      *pNvzlKlcs = uiElozoNvzlKlcs ;
+      m_cRszElsNdMap.SetAt( WORD( uiElozoRsz), pNvzlKlcs) ;
+    }
+    else
+    {
+      goto sql_hiba ;
+    }
+  }
+
+  EXEC SQL CLOSE sel_rsz_nd_kurz ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE sel_rsz_nd_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_RszNdBolNvzl( unsigned uiRsz, unsigned uiNd, unsigned& uiNvzlstKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_rajtszam ;
+    unsigned n_szezon_eve ;
+    unsigned n_nagydij ;
+
+    unsigned n_nvzl_kulcs ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  n_rajtszam   = uiRsz      ;
+  n_szezon_eve = m_uiSzezon ;
+  n_nagydij    = uiNd ;
+
+  n_nvzl_kulcs = 0 ;
+
+  EXEC SQL EXECUTE
+    BEGIN
+      forma1.rsz_nd_bol_nvzl( :n_rajtszam, :n_szezon_eve, :n_nagydij, :n_nvzl_kulcs) ;
+    END ;
+  END-EXEC;
+
+  uiNvzlstKulcs = n_nvzl_kulcs ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  SQL_SQLCAFeltolt() ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CNevezLista::SQL_NvzlKulcsMeghat( unsigned& uiNvzlKulcs ,
+                                       unsigned  uiNagydij   ,
+                                       CNvzSor*  pNvzSor)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+    unsigned n_nagydij ;
+
+    unsigned n_rajtszam   ;
+    unsigned n_vers_nev   ;
+    unsigned n_nemz_nev   ;
+    unsigned n_csapat_nev ;
+    unsigned n_motor_nev  ;
+
+    unsigned n_nvzl_kulcs ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  n_szezon_eve = m_uiSzezon ;
+  n_nagydij    = uiNagydij  ;
+
+  n_rajtszam   = pNvzSor->uiRajtszam  ;
+  n_vers_nev   = pNvzSor->uiVersenyzo ;
+  n_nemz_nev   = pNvzSor->uiNemz      ;
+  n_csapat_nev = pNvzSor->uiCsapat    ;
+  n_motor_nev  = pNvzSor->uiMotor     ;
+
+  /* Szerepel-e mar ez az osszeallitas, ha igen mi a kulcsa ? */
+  EXEC SQL SELECT kulcs
+             INTO :n_nvzl_kulcs
+             FROM nevezesi_lista
+             WHERE rajtszam = :n_rajtszam     AND
+                   versenyzo = :n_vers_nev    AND
+                   nemzetiseg = :n_nemz_nev   AND
+                   csapat     = :n_csapat_nev AND
+                   motor      = :n_motor_nev ;
+
+  /* Ha nincs, akkor lehet felvenni */
+  if ( sqlca.sqlcode == 1403 )
+  {
+    /* Az uj bejegyzes uj kulcsa */
+    EXEC SQL SELECT seq_nvzl.NEXTVAL INTO :n_nvzl_kulcs FROM seq ;
+
+    EXEC SQL INSERT INTO nevezesi_lista
+               VALUES ( :n_nvzl_kulcs,
+                        :n_rajtszam,
+                        :n_vers_nev,
+                        :n_nemz_nev,
+                        :n_csapat_nev,
+                        :n_motor_nev
+                      ) ;
+
+    uiNvzlKulcs = n_nvzl_kulcs ;
+
+    SQL_SQLCAFeltolt() ;
+
+    return 1 ;
+  }
+
+  uiNvzlKulcs = n_nvzl_kulcs ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  SQL_SQLCAFeltolt() ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}

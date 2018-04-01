@@ -1,0 +1,493 @@
+// dbszezon.pc
+
+#include "stdafx.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "resource.h"
+#include "ensqlcam.h"
+
+#include "alaptip.h"
+#include "cnev.h"
+
+#include "pontozas.h"
+#include "cszezon.h"
+
+#define SQLCA_STORAGE_CLASS extern
+#undef  SQLCA_INIT
+
+EXEC SQL INCLUDE sqlca ;
+
+long CSzezon::SQL_SzezonBetolt( unsigned uiSzezon)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+    unsigned n_pontozas   ;
+    unsigned n_edz_els_pont   ;
+    unsigned n_leggy_kor_pont ;
+    unsigned n_elso_legj_besz ;
+
+    struct sql_s_nagydij
+    {
+      unsigned n_nagydij_nev ;
+      unsigned n_palya_nev   ;
+      char     c_datum[13]   ;
+    } nagydij_rekord[20] ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  int nFetch, i, j ;
+  int nEv, nHonap, nNap ;
+  int nCiklFelsHat ;
+  SNagydij*  pNagydij   ;
+  SNagydij** pNagydijak ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  // Ha nincs a kert futam, kiszall. Kesobb 'do break' van.
+  EXEC SQL WHENEVER NOTFOUND GOTO sql_hiba ;
+
+  // Az ev megadasa a kurzor es a kovetkezo SELECT szamara :
+  n_szezon_eve = uiSzezon ;
+
+  // Szelektalas a szezon tablabol, a tobbi a nagydijak tablabol jon
+  EXEC SQL SELECT pontozas, edz_els_pont, leggy_kor_pont, elso_legj_besz
+               INTO :n_pontozas, :n_edz_els_pont, :n_leggy_kor_pont, :n_elso_legj_besz
+             FROM szezon
+             WHERE szezon_eve = :n_szezon_eve ;
+
+  // Ha ide eljutott, van ilyen szezon :
+  m_uiSzezon = uiSzezon  ;
+
+  // A kiszelektalt ertekek tagvaltozokba irasa
+  m_uiPontozas     = n_pontozas       ;
+  m_ucEdzElsPont   = n_edz_els_pont   ;
+  m_ucLeggyKorPont = n_leggy_kor_pont ;
+  m_ucElsLgjBesz   = n_elso_legj_besz ;
+
+  // A nagydijak kiszelektalasa
+  EXEC SQL DECLARE select_nd_kurz CURSOR FOR
+    SELECT nagydij_nev, palya_nev, TO_CHAR( datum, 'YYYY-MM-DD')
+      FROM nagydijak
+      WHERE szezon_eve = :n_szezon_eve ORDER BY datum ;
+
+  EXEC SQL OPEN select_nd_kurz ;
+
+  nFetch = 0 ;
+
+  EXEC SQL WHENEVER NOTFOUND do break ;
+
+  while ( TRUE )
+  {
+    EXEC SQL FETCH select_nd_kurz INTO :nagydij_rekord ;
+
+    nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+    pNagydijak = new SNagydij*[m_ucNagydSzam+nCiklFelsHat] ;
+
+    if ( pNagydijak == NULL )
+      return -1 ;
+
+    // Atmasoljuk a regit az ideiglenes helyere
+    memcpy( pNagydijak, m_pNagydijak, m_ucNagydSzam*sizeof(SNagydij*)) ;
+
+    // Toroljuk a regi tombot
+    delete [] m_pNagydijak ;
+
+    // Ha nem hozott el mindent memoriafoglalasi hiba miatt, legyen tampont
+    memset( pNagydijak+m_ucNagydSzam, 0, nCiklFelsHat*sizeof(SNagydij*)) ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( (pNagydij = new SNagydij()) == NULL )
+      {
+        // Hiba eseten az osztalyt kiuritve adja vissza
+        for ( j = 0 ; j < i ; j++ )
+          delete pNagydijak[j] ;
+
+        delete [] pNagydijak ;
+
+        m_pNagydijak  = NULL ;
+        m_ucNagydSzam = 0 ;
+
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_nd_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      // A nagydij feltoltese
+      pNagydij->m_uiNagyd = nagydij_rekord[i].n_nagydij_nev ;
+      pNagydij->m_uiPalya = nagydij_rekord[i].n_palya_nev   ;
+
+      sscanf( nagydij_rekord[i].c_datum, "%d-%d-%d", &nEv, &nHonap, &nNap) ;
+
+      pNagydij->m_sDatum.ev    = nEv    ;
+      pNagydij->m_sDatum.honap = nHonap ;
+      pNagydij->m_sDatum.nap   = nNap   ;
+
+      pNagydijak[m_ucNagydSzam+i] = pNagydij ;
+    }
+
+    nFetch = sqlca.sqlerrd[2] ;
+    m_pNagydijak = pNagydijak ;
+    m_ucNagydSzam += nCiklFelsHat ;
+  }
+
+  nCiklFelsHat = sqlca.sqlerrd[2] - nFetch ;
+
+  if ( nCiklFelsHat > 0 )
+  {
+    pNagydijak = new SNagydij*[m_ucNagydSzam+nCiklFelsHat] ;
+
+    if ( pNagydijak == NULL )
+      return -1 ;
+
+    // Atmasoljuk a regit az ideiglenes helyere
+    memcpy( pNagydijak, m_pNagydijak, m_ucNagydSzam*sizeof(SNagydij*)) ;
+
+    // Toroljuk a regi tombot
+    delete [] m_pNagydijak ;
+
+    // Ha nem hozott el mindent memoriafoglalasi hiba miatt, legyen tampont
+    memset( pNagydijak+m_ucNagydSzam, 0, nCiklFelsHat*sizeof(SNagydij*)) ;
+
+    for ( i = 0 ; i < nCiklFelsHat ; i++ )
+    {
+      if ( (pNagydij = new SNagydij()) == NULL )
+      {
+        // Hiba eseten az osztalyt kiuritve adja vissza
+        for ( j = 0 ; j < i ; j++ )
+          delete pNagydijak[j] ;
+
+        delete [] pNagydijak ;
+
+        m_pNagydijak  = NULL ;
+        m_ucNagydSzam = 0 ;
+
+        SQL_SQLCAFeltolt() ;
+
+        EXEC SQL CLOSE select_nd_kurz ;
+
+        EXEC SQL COMMIT WORK ;
+
+        return -1 ;
+      }
+
+      // A nagydij feltoltese
+      pNagydij->m_uiNagyd = nagydij_rekord[i].n_nagydij_nev ;
+      pNagydij->m_uiPalya = nagydij_rekord[i].n_palya_nev   ;
+
+      sscanf( nagydij_rekord[i].c_datum, "%d-%d-%d", &nEv, &nHonap, &nNap) ;
+
+      pNagydij->m_sDatum.ev    = nEv    ;
+      pNagydij->m_sDatum.honap = nHonap ;
+      pNagydij->m_sDatum.nap   = nNap   ;
+
+      pNagydijak[m_ucNagydSzam+i] = pNagydij ;
+    }
+
+    m_pNagydijak   = pNagydijak ;
+    m_ucNagydSzam += nCiklFelsHat ;
+  }
+
+  EXEC SQL WHENEVER NOTFOUND CONTINUE ;
+
+  EXEC SQL CLOSE select_nd_kurz ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL COMMIT WORK ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_nd_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_SzezINSERT()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+
+    unsigned n_pontozas       ;
+    unsigned n_edz_els_pont   ;
+    unsigned n_leggy_kor_pont ;
+    unsigned n_els_lgj_besz   ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve = m_uiSzezon   ;
+
+  n_pontozas       = m_uiPontozas     ;
+  n_edz_els_pont   = m_ucEdzElsPont   ;
+  n_leggy_kor_pont = m_ucLeggyKorPont ;
+  n_els_lgj_besz   = m_ucElsLgjBesz   ;
+
+  EXEC SQL INSERT INTO szezon
+             VALUES ( :n_szezon_eve,
+                      :n_pontozas,
+                      :n_edz_els_pont,
+                      :n_leggy_kor_pont,
+                      :n_els_lgj_besz) ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_SzezUPDATE()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+
+    unsigned n_pontozas       ;
+    unsigned n_edz_els_pont   ;
+    unsigned n_leggy_kor_pont ;
+    unsigned n_elso_lgj_besz  ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve = m_uiSzezon   ;
+
+  n_pontozas       = m_uiPontozas     ;
+  n_edz_els_pont   = m_ucEdzElsPont   ;
+  n_leggy_kor_pont = m_ucLeggyKorPont ;
+  n_elso_lgj_besz  = m_ucElsLgjBesz   ;
+
+  EXEC SQL UPDATE szezon
+             SET pontozas       = :n_pontozas,
+                 edz_els_pont   = :n_edz_els_pont,
+                 leggy_kor_pont = :n_leggy_kor_pont,
+                 elso_legj_besz = :n_elso_lgj_besz
+             WHERE szezon_eve = :n_szezon_eve ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_SzezTorol()
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve = m_uiSzezon ;
+
+  EXEC SQL DELETE FROM nagydijak WHERE szezon_eve = :n_szezon_eve ;
+
+  EXEC SQL DELETE FROM szezon WHERE szezon_eve = :n_szezon_eve ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  EXEC SQL CLOSE select_nd_kurz ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_NagydINSERT( SNagydij& sUjNagydij)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve  ;
+    unsigned n_nagydij_nev ;
+    unsigned n_palya_nev   ;
+    char     c_datum[13]   ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+/*  EXEC SQL WHENEVER NOTFOUND CONTINUE ; */
+
+  n_szezon_eve  = m_uiSzezon ;
+  n_nagydij_nev = sUjNagydij.m_uiNagyd ;
+  n_palya_nev   = sUjNagydij.m_uiPalya ;
+
+  sprintf( c_datum, "%d-%d-%d",
+                    sUjNagydij.m_sDatum.ev,
+                    sUjNagydij.m_sDatum.honap,
+                    sUjNagydij.m_sDatum.nap ) ;
+
+  EXEC SQL INSERT INTO nagydijak( szezon_eve, nagydij_nev, palya_nev, datum)
+             VALUES( :n_szezon_eve, :n_nagydij_nev, :n_palya_nev, TO_DATE( :c_datum, 'YYYY-MM-DD') ) ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+/*  EXEC SQL COMMIT WORK ; CSzezFelv::OnCancel stb. */
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_NagydDELETE(unsigned uiNdKulcs)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve  ;
+    unsigned n_nagydij_nev ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve  = m_uiSzezon ;
+  n_nagydij_nev = uiNdKulcs  ;
+
+  EXEC SQL DELETE FROM nagydijak
+             WHERE szezon_eve = :n_szezon_eve AND nagydij_nev = :n_nagydij_nev ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+/*  EXEC SQL COMMIT WORK ; CSzezFelv::OnCancel stb. */
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
+
+long CSzezon::SQL_NagydUPDATE(unsigned uiNdKulcs, SNagydij& sUjNagydij)
+{
+  EXEC SQL BEGIN DECLARE SECTION ;
+
+    unsigned n_szezon_eve  ;
+    unsigned n_regi_nd_nev ;
+
+    unsigned n_nagydij_nev ;
+    unsigned n_palya_nev   ;
+    char     c_datum[13]   ;
+
+  EXEC SQL END DECLARE SECTION ;
+
+  long l_SQLCODE ;
+
+  EXEC SQL WHENEVER SQLERROR GOTO sql_hiba ;
+
+  n_szezon_eve  = m_uiSzezon ;
+  n_regi_nd_nev = uiNdKulcs  ;
+
+  n_nagydij_nev = sUjNagydij.m_uiNagyd ;
+  n_palya_nev   = sUjNagydij.m_uiPalya ;
+
+  sprintf( c_datum, "%d-%d-%d",
+                    sUjNagydij.m_sDatum.ev,
+                    sUjNagydij.m_sDatum.honap,
+                    sUjNagydij.m_sDatum.nap ) ;
+
+  EXEC SQL UPDATE nagydijak
+             SET nagydij_nev=:n_nagydij_nev, palya_nev=:n_palya_nev, datum=TO_DATE(:c_datum,'YYYY-MM-DD')
+               WHERE szezon_eve = :n_szezon_eve AND nagydij_nev=:n_regi_nd_nev ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+/*  EXEC SQL COMMIT WORK ; CSzezFelv::OnCancel stb. */
+
+  return l_SQLCODE ;
+
+sql_hiba :
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE ;
+
+  SQL_SQLCAFeltolt() ;
+
+  l_SQLCODE = sqlca.sqlcode ;
+
+  return l_SQLCODE ;
+}
